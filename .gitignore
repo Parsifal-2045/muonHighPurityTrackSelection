@@ -15,6 +15,15 @@
 *.json
 *.onnx
 
+# logs
+*.log
+
+# python cache
+__pycache__/
+
+# virtualenv (local only)
+venv/
+
 # old and test
 *old_*
 */test/*

@@ -1,0 +1,6 @@
+DNN_ONNX: /shared/muons/phase2MuonTrackingPR/CMSSW_20_1_0_pre2/src/RecoMuon/L3TrackFinder/data/OI_general_model.onnx
+Test_ROC_AUC: 0.9954223589893384
+Test_PR_AUC: 0.9736377343763163
+F2_Threshold: 0.9752223491668701
+TN=1677007 FP=29833 FN=6925 TP=167613
+Precision=0.848906 Recall=0.960324 F2=0.935760

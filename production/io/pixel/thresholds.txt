@@ -1,0 +1,18 @@
+F1_Threshold: 0.865343451499939
+F2_Threshold: 0.5552404522895813
+Test_ROC_AUC: 0.9995610036830657
+Test_PR_AUC: 0.9993123112830659
+Test_F2_global_WP: 0.9905744939974754
+Test_F2_perbin_WP: 0.9905957129372762
+Split: evt10 (event-level, train 60 / val 10 / test 30)
+Tree_budget: 5000
+Chosen_trees: 3250 (prune_tol=0.001, val F2 0.990439, best prefix 5000 at 0.991396)
+Signal_boost: 5.0
+pT-bin F2 set points (validation-derived):
+  pT [0.0, 2.0): thr=0.346747  n_val_sig=1761
+  pT [2.0, 5.0): thr=0.555240  n_val_sig=104953
+  pT [5.0, 10.0): thr=0.729763  n_val_sig=84536
+  pT [10.0, 50.0): thr=0.845616  n_val_sig=38199
+  pT [50.0, 200.0): thr=0.941544  n_val_sig=48490
+  pT [200.0, inf): thr=0.555240  n_val_sig=70170  [fallback->global]
+Model: XGBoost

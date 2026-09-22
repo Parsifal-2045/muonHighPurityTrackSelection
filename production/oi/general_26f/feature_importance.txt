@@ -1,0 +1,31 @@
+Baseline PR-AUC: 0.998846
+Test ROC-AUC: 0.999818
+
+Rank  Feature                                                        Gain
+-------------------------------------------------------------------------
+1     l3_tk_OI_nPixelHits                                         7032.16  cover=11494.8
+2     l3_tk_OI_nTrkLays                                           5417.34  cover=8805.2
+3     l3_tk_OI_nLostHits                                           896.84  cover=3167.5
+4     l3_tk_OI_hitEfficiency                                       739.94  cover=4893.1
+5     l2_mu_vtx_hasMatch                                           675.99  cover=26994.6
+6     l3_tk_OI_impact3D                                            623.59  cover=7329.9
+7     l3_tk_OI_dszErr                                              590.50  cover=3228.4
+8     l3_tk_OI_normalizedChi2                                      404.45  cover=4351.8
+9     l3_tk_OI_pt                                                  365.20  cover=4375.7
+10    is_low_pt                                                    355.91  cover=4117.8
+11    l2_mu_vtx_matchingScore                                      229.46  cover=3853.3
+12    l3_tk_OI_chi2PerHit                                          223.73  cover=2327.2
+13    l3_tk_OI_nFoundHits                                          160.19  cover=2573.5
+14    l3_tk_OI_impactSignificance                                  142.85  cover=5229.0
+15    l3_tk_OI_etaErr                                              139.89  cover=3371.4
+16    l3_tk_OI_dzErr                                               134.38  cover=3428.3
+17    l3_tk_OI_phiErr                                               97.04  cover=2804.0
+18    l3_tk_OI_dxyErr                                               95.93  cover=2599.1
+19    l3_tk_OI_qoverpErr                                            90.30  cover=2352.6
+20    l3_tk_OI_eta                                                  89.69  cover=3621.4
+21    l3_tk_OI_lambdaErr                                            85.65  cover=1628.6
+22    l3_tk_OI_p                                                    82.24  cover=2546.1
+23    l3_tk_OI_relUncertaintyProduct                                70.18  cover=1609.5
+24    l3_tk_OI_sigmaPtOverPt                                        53.07  cover=1481.8
+25    l3_tk_OI_ptErr                                                45.66  cover=1828.7
+26    l3_tk_OI_chi2                                                 41.64  cover=1169.9

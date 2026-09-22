@@ -15,6 +15,7 @@ Contents:
 """
 
 import os
+import sys
 
 import awkward as ak
 import matplotlib.pyplot as plt
@@ -52,6 +53,32 @@ def get_files(data_dir=DATA_DIR):
         for f in os.listdir(data_dir)
         if os.path.isfile(os.path.join(data_dir, f))
     )
+
+
+def tee_log(output_dir, filename="train.log"):
+    """Tee stdout/stderr into <output_dir>/<filename> so the full training
+    log is stored inside the model's output directory. Returns the log file
+    handle (keep it referenced)."""
+    os.makedirs(output_dir, exist_ok=True)
+    fh = open(os.path.join(output_dir, filename), "w")
+
+    class _Tee:
+        def __init__(self, *streams):
+            self.streams = streams
+
+        def write(self, s):
+            for st in self.streams:
+                st.write(s)
+            return len(s)
+
+        def flush(self):
+            for st in self.streams:
+                st.flush()
+
+    sys.stdout = _Tee(sys.__stdout__, fh)
+    sys.stderr = _Tee(sys.__stderr__, fh)
+    print(f"Logging to {output_dir}{filename}")
+    return fh
 
 
 # --------------------------------------------------------------------------- #
@@ -167,23 +194,32 @@ def calculate_metrics(c):
 # Dataset construction
 # --------------------------------------------------------------------------- #
 def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeatures=True,
-                  verbose=False):
+                  verbose=False, event_ids=None):
     """
     Builds the feature matrix from an awkward array of events.
 
     Returns (X, y, file_labels_masked, final_feature_names).
+    If event_ids (one id per event) is given, the per-track event ids survive
+    the same track masks and a 5th return element carries them:
+    (X, y, file_labels_masked, event_ids_masked, final_feature_names).
     """
     if verbose:
         print("Building dataset...")
 
     mask = arr["muon_pixel_tracks_pt"] > 0
 
-    # Expand file labels
+    # Expand file labels (and, optionally, event ids) to per-track arrays
     n_tracks_per_event = ak.num(arr["muon_pixel_tracks_pt"])
     file_labels_jagged = ak.unflatten(
         np.repeat(file_labels_in, n_tracks_per_event), n_tracks_per_event
     )
     file_labels_masked = ak.to_numpy(ak.flatten(file_labels_jagged[mask]))
+    event_ids_masked = None
+    if event_ids is not None:
+        event_ids_jagged = ak.unflatten(
+            np.repeat(event_ids, n_tracks_per_event), n_tracks_per_event
+        )
+        event_ids_masked = ak.to_numpy(ak.flatten(event_ids_jagged[mask]))
 
     cols = []
     final_feature_names = []
@@ -505,7 +541,11 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
         X = X[finite_mask]
         y = y[finite_mask]
         file_labels_masked = file_labels_masked[finite_mask]
+        if event_ids_masked is not None:
+            event_ids_masked = event_ids_masked[finite_mask]
 
+    if event_ids is not None:
+        return X, y, file_labels_masked, event_ids_masked, final_feature_names
     return X, y, file_labels_masked, final_feature_names
 
 
@@ -535,8 +575,12 @@ def compute_sample_weights(y, pt_vals, signal_boost=SIGNAL_BOOST,
 # --------------------------------------------------------------------------- #
 # Per-pT-bin evaluation
 # --------------------------------------------------------------------------- #
-def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir):
-    """Evaluate precision/recall/F2 in pT bins and produce a summary plot."""
+def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir, decisions=None):
+    """Evaluate precision/recall/F2 in pT bins and produce a summary plot.
+
+    `threshold` is the scalar (global) threshold for reference decisions.
+    `decisions`, if given, is the per-track accept mask actually reported and
+    plotted (e.g. from pT-binned thresholds)."""
     bins = [(0.0, 5.0), (5.0, 10.0), (10.0, 50.0), (50.0, 200.0), (200.0, 1e6)]
     labels = ["0-5", "5-10", "10-50", "50-200", ">200"]
 
@@ -552,7 +596,7 @@ def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir):
         if m.sum() == 0:
             continue
         yt, yp = y_true[m], y_pred[m]
-        yb = (yp >= threshold).astype(int)
+        yb = (yp >= threshold).astype(int) if decisions is None else decisions[m].astype(int)
         n_sig = yt.sum()
         if n_sig == 0 or n_sig == len(yt):
             continue
@@ -653,9 +697,13 @@ def plot_roc_pr(y_true, y_pred, output_dir):
     return roc_auc_val, pr_auc_val, prec_arr, rec_arr, thresholds
 
 
-def plot_confusion_matrix(y_true, y_pred, threshold, output_dir):
-    """Plot and save confusion matrix. Returns (cm, yb)."""
-    yb = (y_pred >= threshold).astype(int)
+def plot_confusion_matrix(y_true, y_pred, threshold, output_dir,
+                          decisions=None, title_suffix="", filename="confusion_matrix.png"):
+    """Plot and save confusion matrix. Returns (cm, yb).
+
+    If `decisions` is given, it is the per-track accept mask (e.g. from
+    pT-binned thresholds) and (y_pred, threshold) are ignored."""
+    yb = (y_pred >= threshold).astype(int) if decisions is None else decisions.astype(int)
     cm = confusion_matrix(y_true, yb)
     plt.figure(figsize=(8, 6))
     sns.heatmap(
@@ -667,9 +715,12 @@ def plot_confusion_matrix(y_true, y_pred, threshold, output_dir):
         yticklabels=["True fake", "True signal"],
         annot_kws={"size": 16},
     )
-    plt.title(f"Confusion matrix (threshold={threshold:.3f})")
+    title = f"Confusion matrix (threshold={threshold:.3f})"
+    if title_suffix:
+        title += f" {title_suffix}"
+    plt.title(title)
     plt.tight_layout()
-    plt.savefig(output_dir + "confusion_matrix.png", dpi=300)
+    plt.savefig(output_dir + filename, dpi=300)
     plt.close()
     return cm, yb
 
@@ -684,3 +735,109 @@ def find_f2_threshold(y_true, y_pred):
     bi1 = np.argmax(f1s)
     th1 = thresholds[bi1] if bi1 < len(thresholds) else 0.5
     return th1, f1s[bi1], th2, f2s[bi2]
+
+
+# --------------------------------------------------------------------------- #
+# Event-level splitting ("evt10" scheme)
+# --------------------------------------------------------------------------- #
+def evt10_split(event_ids, seed_offset=0):
+    """Event-level train/val/test masks: ev % 10 -> train (>=4, 60%),
+    val (==3, 10%), test (<3, 30%). All tracks of one event stay in the same
+    split, so correlated tracks can never leak between train and test.
+    Event ids are local to each input file, hence each sample contributes the
+    same 60/10/30 composition. `seed_offset` shifts the modulo window without
+    breaking the grouping, for split-stability studies."""
+    m = (event_ids.astype(np.int64) + seed_offset) % 10
+    return (m >= 4), (m == 3), (m < 3)
+
+
+# --------------------------------------------------------------------------- #
+# pT-binned working points
+# --------------------------------------------------------------------------- #
+def pt_bins_from_edges(edges):
+    """[(lo, hi)] covering [edges[0], inf) so every track lands in one bin."""
+    edges = list(edges)
+    return [(lo, hi) for lo, hi in zip(edges[:-1], edges[1:])] + [
+        (edges[-1], np.inf)
+    ]
+
+
+def find_f2_threshold_binned(y_true, y_pred, pt_values, edges, min_signal=100):
+    """Global F1/F2 thresholds plus per-pT-bin F2 thresholds.
+
+    Per-bin thresholds are F2-optimal points of the bin's own PR curve; bins
+    with fewer than `min_signal` signal tracks fall back to the global F2
+    threshold (flagged). Must be computed on the validation split only.
+
+    Returns dict {
+      "global_f1", "global_f2",
+      "bins": [(lo, hi, f2_threshold, n_signal, n_rows, fell_back_to_global)]
+    }."""
+    th1, f1b, th2, f2b = find_f2_threshold(y_true, y_pred)
+    bins = []
+    for lo, hi in pt_bins_from_edges(edges):
+        m = (pt_values >= lo) & (pt_values < hi)
+        n_sig = int(y_true[m].sum()) if m.any() else 0
+        if n_sig >= min_signal and len(np.unique(y_true[m])) == 2:
+            _, _, bth2, _ = find_f2_threshold(y_true[m], y_pred[m])
+            bins.append((lo, hi, float(bth2), n_sig, int(m.sum()), False))
+        else:
+            bins.append((lo, hi, float(th2), n_sig, int(m.sum()), True))
+    return {"global_f1": float(th1), "global_f2": float(th2), "bins": bins}
+
+
+def apply_binned_thresholds(y_pred, pt_values, edges, bin_thresholds):
+    """Per-track accept decisions using each pT bin's own threshold.
+    `bin_thresholds` follows the pt_bins_from_edges ordering."""
+    dec = np.zeros(len(y_pred), dtype=bool)
+    for (lo, hi), thr in zip(pt_bins_from_edges(edges), bin_thresholds):
+        m = (pt_values >= lo) & (pt_values < hi)
+        dec[m] = y_pred[m] >= thr
+    return dec
+
+
+# --------------------------------------------------------------------------- #
+# Reference-model comparison
+# --------------------------------------------------------------------------- #
+def rescore_reference_forest(ref_path, X_val, y_val, pt_val_raw,
+                             X_test, y_test, pt_test_raw, cfg):
+    """Re-score a previous production forest on the current split.
+
+    Its working points are derived on the validation split with the same
+    binned-F2 scheme, so old-vs-new numbers are strictly comparable.
+    Writes ref_forest_rescore.txt in cfg["output_dir"]."""
+    import xgboost as xgb
+    from sklearn.metrics import average_precision_score, roc_auc_score
+
+    ref = xgb.Booster()
+    ref.load_model(ref_path)
+    n_ref = len(ref.get_dump())
+    s_val = ref.predict(xgb.DMatrix(X_val))
+    s_test = ref.predict(xgb.DMatrix(X_test))
+    wp = find_f2_threshold_binned(
+        y_val, s_val, pt_val_raw, cfg["pt_threshold_edges"], cfg["min_bin_signal"]
+    )
+    th_g = wp["global_f2"]
+    yt = y_test.astype(np.int32)
+    prauc = average_precision_score(yt, s_test)
+    ra = roc_auc_score(yt, s_test)
+    dec_g = s_test >= th_g
+    dec_b = apply_binned_thresholds(
+        s_test, pt_test_raw, cfg["pt_threshold_edges"],
+        [b[2] for b in wp["bins"]],
+    )
+    tn, fp, fn, tp = confusion_matrix(yt, dec_g, labels=[0, 1]).ravel()
+    p_g, r_g, _, _, f2_g = calculate_metrics((tp, fp, fn, tn))
+    tn, fp, fn, tp = confusion_matrix(yt, dec_b, labels=[0, 1]).ravel()
+    p_b, r_b, _, _, f2_b = calculate_metrics((tp, fp, fn, tn))
+    print(f"  Reference: {ref_path} ({n_ref} trees)")
+    print(f"  ROC-AUC={ra:.6f}  PR-AUC={prauc:.6f}")
+    print(f"  @global WP ({th_g:.4f}):  P={p_g:.4f} R={r_g:.4f} F2={f2_g:.4f}")
+    print(f"  @per-bin WPs:           P={p_b:.4f} R={r_b:.4f} F2={f2_b:.4f}")
+    with open(cfg["output_dir"] + "ref_forest_rescore.txt", "w") as fo:
+        fo.write(f"Reference_model: {ref_path}\nTrees: {n_ref}\n")
+        fo.write(f"Test_ROC_AUC: {ra}\nTest_PR_AUC: {prauc}\n")
+        fo.write(f"Global_F2_threshold: {th_g}\n")
+        fo.write(f"Global_WP: P={p_g} R={r_g} F2={f2_g}\n")
+        fo.write(f"Perbin_WP: P={p_b} R={r_b} F2={f2_b}\n")
+    return {"prauc": prauc, "roc": ra, "f2_global": f2_g, "f2_perbin": f2_b}

@@ -22,6 +22,10 @@ import awkward as ak
 import numpy as np
 import uproot
 
+# Pull build_dataset and the branch lists from the training scripts (in production/dnn).
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dnn"))
+import os
+
 seed_model = False
 if seed_model:
     from seeds_model import (
@@ -42,9 +46,6 @@ else:
         tk_branches,
     )
     pt_feature_name = "muon_pixel_tracks_pt"
-
-# Pull build_dataset and the branch lists from training script.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def main():
