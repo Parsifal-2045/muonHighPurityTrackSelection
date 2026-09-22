@@ -1,0 +1,7 @@
+F1_Threshold: 0.9019471406936646
+F2_Threshold: 0.6882812976837158
+Test_ROC_AUC: 0.9989476845123452
+Test_PR_AUC: 0.9967263730858347
+Best_iteration: 1999
+Signal_boost: 5.0
+Model: XGBoost

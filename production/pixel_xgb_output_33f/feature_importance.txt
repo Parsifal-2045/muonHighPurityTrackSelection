@@ -1,0 +1,37 @@
+Baseline PR-AUC: 0.999108
+Test ROC-AUC: 0.999464
+
+Rank  Feature                                                        Gain
+-------------------------------------------------------------------------
+1     L1TkMu_nStubs                                               8226.74  cover=21378.9
+2     L1TkMu_nStubs_Endcap                                        1270.26  cover=18968.4
+3     is_low_pt                                                    488.49  cover=12210.2
+4     muon_pixel_tracks_pt                                         348.60  cover=9551.0
+5     L1TkMu_secondBest_dR2                                        298.76  cover=19181.1
+6     L1TkMu_stubQual_max                                          264.70  cover=18038.9
+7     muon_pixel_tracks_phiErr                                     228.88  cover=8017.4
+8     L1TkMu_nStubs_Barrel                                         222.75  cover=28281.0
+9     muon_pixel_tracks_etaErr                                     158.05  cover=9233.7
+10    L1TkMu_matchingScore                                         152.37  cover=8273.1
+11    muon_pixel_tracks_absEta                                     151.02  cover=10302.5
+12    L1TkMu_stubMax_depthRegion                                   131.04  cover=11130.8
+13    muon_pixel_tracks_sip2D                                      130.72  cover=7305.3
+14    muon_pixel_tracks_nPixelHits                                 120.80  cover=5761.8
+15    muon_pixel_tracks_nFoundHits                                 115.42  cover=7759.9
+16    L1TkMu_stubMax_phiRegion                                     108.72  cover=5951.4
+17    muon_pixel_tracks_p                                          103.69  cover=8840.9
+18    muon_pixel_tracks_qoverpErr                                  101.32  cover=8697.7
+19    muon_pixel_tracks_sigmaPtOverPt                               99.67  cover=8979.3
+20    L1TkMu_dR2min                                                 94.61  cover=6358.9
+21    muon_pixel_tracks_lambdaErr                                   94.21  cover=8268.1
+22    L1TkMu_chi2Pt                                                 93.98  cover=5949.3
+23    L1TkMu_nCompatible                                            90.34  cover=19849.0
+24    muon_pixel_tracks_impact3D                                    85.48  cover=18232.0
+25    muon_pixel_tracks_ptErrOverP                                  83.69  cover=7084.1
+26    muon_pixel_tracks_dzErr                                       82.23  cover=7875.2
+27    L1TkMu_stubMax_etaRegion                                      82.06  cover=11127.1
+28    muon_pixel_tracks_dxyOverPt                                   82.02  cover=5990.0
+29    L1TkMu_dPtNorm                                                76.46  cover=7078.3
+30    muon_pixel_tracks_nTrkLays                                    71.54  cover=7465.2
+31    muon_pixel_tracks_dzOverDxy                                   59.05  cover=6572.2
+32    muon_pixel_tracks_sipZ                                        57.91  cover=7862.9
