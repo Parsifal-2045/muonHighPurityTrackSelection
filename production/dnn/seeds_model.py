@@ -4,13 +4,15 @@ MuonSelectionDNN - High-Purity Muon Track Selector
 Input samples produced from CMSSW with the NANO:@MUHLTTraining flavour
 
 Run the training with:
-    torchrun --standalone --nproc_per_node=<NGPUs> seeds_model.py
+    torchrun --standalone --nproc_per_node=<NGPUs> seeds_model.py --data-dir <seeds-chain n-tuples>
 """
 
+import argparse
 import copy
 import gc
 import math
 import os
+import sys
 import time
 
 import awkward as ak
@@ -22,6 +24,10 @@ import torch.distributed as dist
 import torch.nn as nn
 import torch.optim as optim
 import uproot
+
+# onnx_utils (shared ONNX export/session helpers) lives in production/.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+import onnx_utils  # noqa: E402
 from sklearn.metrics import (
     auc,
     average_precision_score,
@@ -40,7 +46,7 @@ from torch.utils.data.distributed import DistributedSampler
 
 # Configuration
 CFG = dict(
-    data_dir="/cms-hlt-nfs/user/lferragi/seedsSelector/",
+    data_dir=None,  # --data-dir: seeds-chain training n-tuples
     output_dir="seeds_output/",
     # use stubs
     useL1TkMuStubFeatures=True,
@@ -72,16 +78,6 @@ CFG = dict(
     onnx_opset=13,
 )
 
-# Input files
-files = sorted(
-    [
-        os.path.join(CFG["data_dir"], f)
-        for f in os.listdir(CFG["data_dir"])
-        if os.path.isfile(os.path.join(CFG["data_dir"], f))
-    ]
-)
-print(f"Selected {len(files)} input files:")
-print(files)
 
 main_branch = "Events"
 tk_branches = [
@@ -879,6 +875,13 @@ def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir):
 
 def main():
     cfg = CFG
+    files = sorted(
+        os.path.join(cfg["data_dir"], f)
+        for f in os.listdir(cfg["data_dir"])
+        if f.endswith(".root") and os.path.isfile(os.path.join(cfg["data_dir"], f))
+    )
+    print(f"Selected {len(files)} input files:")
+    print(files)
     os.makedirs(cfg["output_dir"], exist_ok=True)
 
     # Load data
@@ -1308,17 +1311,19 @@ def main():
             (m_fast, "model_fast.onnx", "Fast (BN fused)"),
         ]:
             path = cfg["output_dir"] + name
-            torch.onnx.export(
+            onnx_utils.export_torch_onnx(
                 m,
                 dummy,
                 path,
+                cfg["onnx_opset"],
                 export_params=True,
-                opset_version=cfg["onnx_opset"],
                 input_names=["input"],
                 output_names=["output"],
                 dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
             )
-            print(f"  {tag}: {path}  ({os.path.getsize(path) / 1024:.0f} KB)")
+            d_onnx = onnx_utils.verify_torch_onnx(m, path, input_dim)
+            print(f"  {tag}: {path}  ({os.path.getsize(path) / 1024:.0f} KB, "
+                  f"ONNX Runtime vs torch max |diff| {d_onnx:.2e})")
 
         print("\n  Inference benchmark (1000 x single-sample CPU):")
         for m, tag in [(m_std, "standard"), (m_fast, "fast")]:
@@ -1346,4 +1351,7 @@ def main():
 
 
 if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description="Train the IO seeds-chain DNN (launch with torchrun)")
+    ap.add_argument("--data-dir", required=True, help="directory with the seeds-chain training n-tuples (*.root)")
+    CFG["data_dir"] = ap.parse_args().data_dir
     main()

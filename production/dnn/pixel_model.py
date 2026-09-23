@@ -4,9 +4,10 @@ MuonSelectionDNN - High-Purity Muon Track Selector
 Input samples produced from CMSSW with the NANO:@MUHLTTraining flavour
 
 Run the training with:
-    torchrun --standalone --nproc_per_node=<NGPUs> pixel_model.py
+    torchrun --standalone --nproc_per_node=<NGPUs> pixel_model.py --data-dir <pixel-chain n-tuples>
 """
 
+import argparse
 import copy
 import gc
 import math
@@ -40,6 +41,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 
+import onnx_utils
 import pixel_features as pf
 
 # Re-export shared names for backward compatibility (dump_features.py etc.)
@@ -57,7 +59,7 @@ plot_importance = pf.plot_importance
 
 # Configuration
 CFG = dict(
-    data_dir=pf.DATA_DIR,
+    data_dir=None,  # --data-dir: pixel-track chain training n-tuples
     output_dir="pixel_output/",
     # use stubs
     useL1TkMuStubFeatures=True,
@@ -89,10 +91,6 @@ CFG = dict(
     onnx_opset=pf.ONNX_OPSET,
 )
 
-# Input files
-files = pf.get_files(CFG["data_dir"])
-print(f"Selected {len(files)} input files:")
-print(files)
 
 
 
@@ -371,6 +369,9 @@ def compute_permutation_importance(model, X, y, names, n=5, bs=8192, dev="cpu"):
 
 def main():
     cfg = CFG
+    files = pf.get_files(cfg["data_dir"])
+    print(f"Selected {len(files)} input files:")
+    print(files)
     os.makedirs(cfg["output_dir"], exist_ok=True)
 
     # Load data
@@ -786,17 +787,19 @@ def main():
             (m_fast, "model_fast.onnx", "Fast (BN fused)"),
         ]:
             path = cfg["output_dir"] + name
-            torch.onnx.export(
+            onnx_utils.export_torch_onnx(
                 m,
                 dummy,
                 path,
+                cfg["onnx_opset"],
                 export_params=True,
-                opset_version=cfg["onnx_opset"],
                 input_names=["input"],
                 output_names=["output"],
                 dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
             )
-            print(f"  {tag}: {path}  ({os.path.getsize(path) / 1024:.0f} KB)")
+            d_onnx = onnx_utils.verify_torch_onnx(m, path, input_dim)
+            print(f"  {tag}: {path}  ({os.path.getsize(path) / 1024:.0f} KB, "
+                  f"ONNX Runtime vs torch max |diff| {d_onnx:.2e})")
 
         print("\n  Inference benchmark (1000 x single-sample CPU):")
         for m, tag in [(m_std, "standard"), (m_fast, "fast")]:
@@ -824,4 +827,7 @@ def main():
 
 
 if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description="Train the IO pixel-track DNN (launch with torchrun)")
+    ap.add_argument("--data-dir", required=True, help="directory with the pixel-track chain training n-tuples (*.root)")
+    CFG["data_dir"] = ap.parse_args().data_dir
     main()
