@@ -1,0 +1,63 @@
+{
+  "note": "ms per event (TimeReport per-event real time, 12-thread jobs, 4 jobs sharing a 94-CPU slot); same 250 RelVal events per chain/sample; old_code = file-layout per-track traversal, new_code = packed depth-first layout with tree-major batching",
+  "old_code": {
+    "pixel_Bs": {
+      "IO_v3": 2.207,
+      "IO_v2": 1.028,
+      "OI_v3": 0.148,
+      "OI_v2": 0.122,
+      "event_loop_real_s_per_event": 2.255669
+    },
+    "pixel_ZMM": {
+      "IO_v3": 2.137,
+      "IO_v2": 1.048,
+      "OI_v3": 0.13,
+      "OI_v2": 0.109,
+      "event_loop_real_s_per_event": 2.155231
+    },
+    "seeds_Bs": {
+      "IO_v3": 5.095,
+      "IO_v2": 1.975,
+      "OI_v3": 0.112,
+      "OI_v2": 0.096,
+      "event_loop_real_s_per_event": 2.098918
+    },
+    "seeds_ZMM": {
+      "IO_v3": 4.567,
+      "IO_v2": 1.561,
+      "OI_v3": 0.098,
+      "OI_v2": 0.084,
+      "event_loop_real_s_per_event": 2.138505
+    }
+  },
+  "new_code": {
+    "pixel_Bs": {
+      "IO_v3": 1.18,
+      "IO_v2": 0.682,
+      "OI_v3": 0.126,
+      "OI_v2": 0.107,
+      "event_loop_real_s_per_event": 1.956504
+    },
+    "pixel_ZMM": {
+      "IO_v3": 1.101,
+      "IO_v2": 0.693,
+      "OI_v3": 0.115,
+      "OI_v2": 0.097,
+      "event_loop_real_s_per_event": 2.022744
+    },
+    "seeds_Bs": {
+      "IO_v3": 2.445,
+      "IO_v2": 1.117,
+      "OI_v3": 0.101,
+      "OI_v2": 0.085,
+      "event_loop_real_s_per_event": 1.967573
+    },
+    "seeds_ZMM": {
+      "IO_v3": 2.161,
+      "IO_v2": 1.01,
+      "OI_v3": 0.09,
+      "OI_v2": 0.075,
+      "event_loop_real_s_per_event": 2.028479
+    }
+  }
+}

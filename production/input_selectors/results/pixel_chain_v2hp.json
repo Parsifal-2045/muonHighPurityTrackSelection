@@ -1,0 +1,562 @@
+{
+  "ZMM": {
+    "file": "study_pixel_ZMM_A.root",
+    "events": 250,
+    "reachable_muons": 403,
+    "reachable_loose_cone": 407,
+    "per_event": {
+      "all_pixel_tracks": {
+        "tracks": 439788,
+        "fakes": 438822
+      },
+      "muon_pixel_tracks": {
+        "tracks": 1054,
+        "fakes": 647,
+        "fakes_after_hp": 108,
+        "tracks_after_hp": 504
+      },
+      "muon_pixel_tracks_keep2": {
+        "tracks": 1545,
+        "fakes": 1137,
+        "fakes_after_hp": 146,
+        "tracks_after_hp": 542
+      },
+      "muon_pixel_tracks_keep3": {
+        "tracks": 1872,
+        "fakes": 1460,
+        "fakes_after_hp": 165,
+        "tracks_after_hp": 561
+      }
+    },
+    "efficiency": {
+      "muon_pixel_tracks": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep2": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep3": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      }
+    },
+    "efficiency_after_hp": {
+      "muon_pixel_tracks+HP": {
+        "overall": 0.9776674937965261,
+        "lost": 9,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 0.7804878048780488,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep2+HP": {
+        "overall": 0.9776674937965261,
+        "lost": 9,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 0.7804878048780488,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep3+HP": {
+        "overall": 0.9776674937965261,
+        "lost": 9,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 41,
+            "eff": 0.7804878048780488,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 249,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      }
+    }
+  },
+  "BsToMuMu": {
+    "file": "study_pixel_Bs_A.root",
+    "events": 250,
+    "reachable_muons": 371,
+    "reachable_loose_cone": 385,
+    "per_event": {
+      "all_pixel_tracks": {
+        "tracks": 442454,
+        "fakes": 441502
+      },
+      "muon_pixel_tracks": {
+        "tracks": 1038,
+        "fakes": 662,
+        "fakes_after_hp": 163,
+        "tracks_after_hp": 528
+      },
+      "muon_pixel_tracks_keep2": {
+        "tracks": 1560,
+        "fakes": 1183,
+        "fakes_after_hp": 217,
+        "tracks_after_hp": 583
+      },
+      "muon_pixel_tracks_keep3": {
+        "tracks": 1888,
+        "fakes": 1510,
+        "fakes_after_hp": 243,
+        "tracks_after_hp": 609
+      }
+    },
+    "efficiency": {
+      "muon_pixel_tracks": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep2": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep3": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      }
+    },
+    "efficiency_after_hp": {
+      "muon_pixel_tracks+HP": {
+        "overall": 0.9703504043126685,
+        "lost": 11,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 0.9571428571428572,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 0.984,
+            "lost": 2
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep2+HP": {
+        "overall": 0.9703504043126685,
+        "lost": 11,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 0.9571428571428572,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 0.984,
+            "lost": 2
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_pixel_tracks_keep3+HP": {
+        "overall": 0.9703504043126685,
+        "lost": 11,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 210,
+            "eff": 0.9571428571428572,
+            "lost": 9
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 125,
+            "eff": 0.984,
+            "lost": 2
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      }
+    }
+  }
+}

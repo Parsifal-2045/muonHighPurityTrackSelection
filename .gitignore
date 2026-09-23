@@ -45,3 +45,7 @@ venv/
 !production/io/seeds/train.log
 !production/oi/pixel/train.log
 !production/oi/general/train.log
+!production/tuning/results/*.json
+!production/features_validation/results/*.json
+!production/input_selectors/results/*.json
+!production/results/*.json

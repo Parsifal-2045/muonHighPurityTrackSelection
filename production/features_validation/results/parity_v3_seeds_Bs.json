@@ -1,0 +1,256 @@
+[
+  {
+    "selector": "IO seeds (hltPhase2MuonIOTrackSelectionHighPurityForest)",
+    "model_dir": "production/io/seeds",
+    "bin_md5": "8c936b2ef077e5501f18c6676b5c0cc1",
+    "tracks_matched": 1936,
+    "only_in_python": 11,
+    "only_in_cmssw": 0,
+    "signal_tracks": 398,
+    "features_max_abs_diff": 0.0,
+    "features_exact_fraction": 1.0,
+    "per_feature": {
+      "muon_general_tracks_p": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_etaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_phiErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_dzErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_qoverpErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_lambdaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_nPixelHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_nTrkLays": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_nFoundHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_impact3D": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_sigmaPtOverPt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_sip2D": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_sipZ": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_dxyOverPt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_ptErrOverP": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_dzOverDxy": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_general_tracks_absEta": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_nStubs": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_nStubs_Endcap": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_nStubs_Barrel": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_stubQual_max": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_stubMax_etaRegion": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_stubMax_phiRegion": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_stubMax_depthRegion": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_hasMatch": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_dR2min": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_dPtNorm": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_chi2Pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_matchingScore": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_nCompatible": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_secondBest_dR2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "is_low_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      }
+    },
+    "score_max_abs_diff_vs_python_model": 1.1920928955078125e-07,
+    "score_max_abs_diff_vs_bin_replay_on_cpp_features": 1.1920928955078125e-07,
+    "decision_differences_vs_python": 0,
+    "selected_cmssw": 644
+  },
+  {
+    "selector": "OI seeds (hltPhase2L3OIMuonTrackSelectionHighPurity)",
+    "model_dir": "production/oi/general",
+    "bin_md5": "78fa350f5572eecb31e3498cb72f51fa",
+    "tracks_matched": 515,
+    "only_in_python": 0,
+    "only_in_cmssw": 0,
+    "signal_tracks": 19,
+    "features_max_abs_diff": 0.0,
+    "features_exact_fraction": 1.0,
+    "per_feature": {
+      "l3_tk_OI_p": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_normalizedChi2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_etaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_phiErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dszErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dxyErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dzErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_qoverpErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_lambdaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_eta": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nPixelHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nTrkLays": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nFoundHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nLostHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_impact3D": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_impactSignificance": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_chi2PerHit": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_hitEfficiency": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l2_mu_vtx_hasMatch": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l2_mu_vtx_matchingScore": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "is_low_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      }
+    },
+    "score_max_abs_diff_vs_python_model": 2.9802322387695312e-08,
+    "score_max_abs_diff_vs_bin_replay_on_cpp_features": 2.9802322387695312e-08,
+    "decision_differences_vs_python": 0,
+    "selected_cmssw": 23
+  }
+]

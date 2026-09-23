@@ -1,0 +1,42 @@
+{
+  "seeds_xgb_output_33f_v2": {
+    "model": "../io/archive/seeds_xgb_output_33f_v2",
+    "roc_auc": 0.9613991386835973,
+    "pr_auc": 0.9345236952938153,
+    "eff_at_wp": 0.9161603888213852,
+    "fakes_per_event_at_wp": 0.498,
+    "fakes_per_event_at_ref_eff": 0.476
+  },
+  "io_seeds_d6": {
+    "model": "depth_study/io_seeds_d6",
+    "roc_auc": 0.9604188918607417,
+    "pr_auc": 0.9313626797134615,
+    "eff_at_wp": 0.905224787363305,
+    "fakes_per_event_at_wp": 0.458,
+    "fakes_per_event_at_ref_eff": 0.614
+  },
+  "io_seeds_d8": {
+    "model": "depth_study/io_seeds_d8",
+    "roc_auc": 0.9589352179750491,
+    "pr_auc": 0.92950595911614,
+    "eff_at_wp": 0.9246658566221142,
+    "fakes_per_event_at_wp": 0.75,
+    "fakes_per_event_at_ref_eff": 0.568
+  },
+  "io_seeds_d10": {
+    "model": "depth_study/io_seeds_d10",
+    "roc_auc": 0.9593974670692393,
+    "pr_auc": 0.9277729846958576,
+    "eff_at_wp": 0.9295261239368166,
+    "fakes_per_event_at_wp": 0.842,
+    "fakes_per_event_at_ref_eff": 0.588
+  },
+  "seeds": {
+    "model": "../io/seeds",
+    "roc_auc": 0.9584801486292382,
+    "pr_auc": 0.9257503168534011,
+    "eff_at_wp": 0.9343863912515188,
+    "fakes_per_event_at_wp": 0.952,
+    "fakes_per_event_at_ref_eff": 0.628
+  }
+}

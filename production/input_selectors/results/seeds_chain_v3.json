@@ -1,0 +1,480 @@
+{
+  "ZMM": {
+    "file": "final_seeds_ZMM.root",
+    "events": 250,
+    "reachable_muons": 410,
+    "reachable_loose_cone": 418,
+    "per_event": {
+      "all_lst_seeds": {
+        "tracks": 495992,
+        "fakes": 494820
+      },
+      "muon_seeds": {
+        "tracks": 1774,
+        "fakes": 1347
+      },
+      "muon_seeds_keep3": {
+        "tracks": 2426,
+        "fakes": 1996
+      },
+      "muon_seeds_keep4": {
+        "tracks": 3037,
+        "fakes": 2603
+      },
+      "muon_general_tracks": {
+        "tracks": 1752,
+        "fakes": 1329,
+        "fakes_after_hp": 208,
+        "tracks_after_hp": 600
+      }
+    },
+    "efficiency": {
+      "muon_seeds": {
+        "overall": 0.9975609756097561,
+        "lost": 1,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 46,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 251,
+            "eff": 0.9960159362549801,
+            "lost": 1
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_seeds_keep3": {
+        "overall": 0.9975609756097561,
+        "lost": 1,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 46,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 251,
+            "eff": 0.9960159362549801,
+            "lost": 1
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_seeds_keep4": {
+        "overall": 0.9975609756097561,
+        "lost": 1,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 46,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 251,
+            "eff": 0.9960159362549801,
+            "lost": 1
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_general_tracks": {
+        "overall": 0.9951219512195122,
+        "lost": 2,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 46,
+            "eff": 0.9782608695652174,
+            "lost": 1
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 251,
+            "eff": 0.9960159362549801,
+            "lost": 1
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      }
+    },
+    "efficiency_after_hp": {
+      "muon_general_tracks+HP": {
+        "overall": 0.948780487804878,
+        "lost": 21,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 46,
+            "eff": 0.5652173913043478,
+            "lost": 20
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 16,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 54,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 251,
+            "eff": 0.9960159362549801,
+            "lost": 1
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 43,
+            "eff": 1.0,
+            "lost": 0
+          }
+        ]
+      }
+    }
+  },
+  "BsToMuMu": {
+    "file": "final_seeds_Bs.root",
+    "events": 250,
+    "reachable_muons": 382,
+    "reachable_loose_cone": 402,
+    "per_event": {
+      "all_lst_seeds": {
+        "tracks": 498865,
+        "fakes": 497702
+      },
+      "muon_seeds": {
+        "tracks": 1970,
+        "fakes": 1568
+      },
+      "muon_seeds_keep3": {
+        "tracks": 2780,
+        "fakes": 2373
+      },
+      "muon_seeds_keep4": {
+        "tracks": 3512,
+        "fakes": 3103
+      },
+      "muon_general_tracks": {
+        "tracks": 1948,
+        "fakes": 1548,
+        "fakes_after_hp": 268,
+        "tracks_after_hp": 645
+      }
+    },
+    "efficiency": {
+      "muon_seeds": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 217,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 129,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_seeds_keep3": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 217,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 129,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_seeds_keep4": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 217,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 129,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      },
+      "muon_general_tracks": {
+        "overall": 1.0,
+        "lost": 0,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 217,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 129,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      }
+    },
+    "efficiency_after_hp": {
+      "muon_general_tracks+HP": {
+        "overall": 0.9554973821989529,
+        "lost": 17,
+        "per_pt_bin": [
+          {
+            "lo": 2.0,
+            "hi": 5.0,
+            "n": 217,
+            "eff": 0.9216589861751152,
+            "lost": 17
+          },
+          {
+            "lo": 5.0,
+            "hi": 10.0,
+            "n": 129,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 10.0,
+            "hi": 25.0,
+            "n": 35,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 25.0,
+            "hi": 50.0,
+            "n": 1,
+            "eff": 1.0,
+            "lost": 0
+          },
+          {
+            "lo": 50.0,
+            "hi": null,
+            "n": 0,
+            "eff": null,
+            "lost": 0
+          }
+        ]
+      }
+    }
+  }
+}
