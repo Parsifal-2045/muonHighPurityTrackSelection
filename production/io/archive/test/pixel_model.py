@@ -2,6 +2,7 @@
 MuonSelectionDNN - High-Purity Muon Track Selector
 """
 
+import argparse
 import copy
 import gc
 import math
@@ -33,9 +34,12 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--data-dir", required=True, help="directory with the pixel-chain training n-tuples")
+
 # Configuration
 CFG = dict(
-    data_dir="/cms-hlt-nfs/user/lferragi/tunedPixelSelector/",
+    data_dir=_ap.parse_args().data_dir,  # pixel-chain training n-tuples
     output_dir="tuned_pixel_output/",
     # use stubs
     useL1TkMuStubFeatures=True,

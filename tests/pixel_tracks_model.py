@@ -1,3 +1,4 @@
+import argparse
 import copy
 import gc
 import os
@@ -28,8 +29,10 @@ from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
 
 # Input files
+_ap = argparse.ArgumentParser()
+_ap.add_argument("--data-dir", required=True, help="directory with the n-tuples of this early study (pixel-track gun samples)")
+data_dir = _ap.parse_args().data_dir
 files = []
-data_dir = "/scratch/qualitySelectorPixelTracksGuns"
 for path in os.listdir(data_dir):
     if os.path.isfile(os.path.join(data_dir, path)):
         files.append(os.path.join(data_dir, path))
