@@ -1,18 +1,20 @@
-F1_Threshold: 0.8841254711151123
-F2_Threshold: 0.631809413433075
-Test_ROC_AUC: 0.9991306493064821
-Test_PR_AUC: 0.9975260270153885
-Test_F2_global_WP: 0.9831641884753396
-Test_F2_perbin_WP: 0.9831804175798418
+Flavour: IO seeds
+Model: XGBoost (1250 trees, 33 features)
+F1_Threshold: 0.6565025448799133
+F2_Threshold: 0.17353090643882751
+Test_ROC_AUC: 0.999524368621082
+Test_PR_AUC: 0.9988005617105382
+Test_F2_global_WP: 0.9904428302343138
+Test_F2_perbin_WP: 0.9904623024838308
+Test_perbin_WP: precision=0.9803116007506707 recall=0.9930331620691616 fake_rejection=0.9956844068763594
 Split: evt10 (event-level, train 60 / val 10 / test 30)
 Tree_budget: 5000
-Chosen_trees: 4050 (prune_tol=0.001, val F2 0.983142, best prefix 5000 at 0.984141)
-Signal_boost: 5.0
+Chosen_trees: 1250 (prune_tol=0.001, val F2 0.990608, best prefix 4900 at 0.991600)
 pT-bin F2 set points (validation-derived):
-  pT [0.0, 2.0): thr=0.421682  n_val_sig=1640
-  pT [2.0, 5.0): thr=0.631032  n_val_sig=98588
-  pT [5.0, 10.0): thr=0.665044  n_val_sig=87105
-  pT [10.0, 50.0): thr=0.712998  n_val_sig=37745
-  pT [50.0, 200.0): thr=0.660107  n_val_sig=47743
-  pT [200.0, inf): thr=0.932156  n_val_sig=68751
-Model: XGBoost
+  pT [0.0, 2.0): thr=0.035900  n_val_sig=1640
+  pT [2.0, 5.0): thr=0.166241  n_val_sig=98588
+  pT [5.0, 10.0): thr=0.346932  n_val_sig=87105
+  pT [10.0, 50.0): thr=0.470598  n_val_sig=37745
+  pT [50.0, 200.0): thr=0.560072  n_val_sig=47743
+  pT [200.0, inf): thr=0.855624  n_val_sig=68751
+compact .bin md5: 8c936b2ef077e5501f18c6676b5c0cc1

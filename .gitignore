@@ -30,3 +30,18 @@ venv/
 
 # output dirs
 *_output
+
+# ...but keep the production training records (the CMSSW cfi values and the
+# provenance of the deployed models come from them)
+!production/io/pixel/thresholds.json
+!production/io/seeds/thresholds.json
+!production/oi/pixel/thresholds.json
+!production/oi/general/thresholds.json
+!production/io/pixel/manifest.json
+!production/io/seeds/manifest.json
+!production/oi/pixel/manifest.json
+!production/oi/general/manifest.json
+!production/io/pixel/train.log
+!production/io/seeds/train.log
+!production/oi/pixel/train.log
+!production/oi/general/train.log

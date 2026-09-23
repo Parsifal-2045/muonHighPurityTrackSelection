@@ -1,0 +1,27 @@
+Baseline PR-AUC: 0.998839
+Test ROC-AUC: 0.999820
+
+Rank  Feature                                                        Gain
+-------------------------------------------------------------------------
+1     l3_tk_OI_nPixelHits                                        12925.63  cover=14440.1
+2     l3_tk_OI_nTrkLays                                           1939.16  cover=7097.1
+3     l3_tk_OI_nLostHits                                           961.77  cover=3884.8
+4     l3_tk_OI_impact3D                                            616.03  cover=7902.7
+5     l3_tk_OI_hitEfficiency                                       454.36  cover=6008.9
+6     l3_tk_OI_normalizedChi2                                      413.52  cover=3971.1
+7     l3_tk_OI_pt                                                  410.33  cover=4061.3
+8     is_low_pt                                                    387.02  cover=4114.7
+9     l3_tk_OI_nFoundHits                                          335.83  cover=4669.2
+10    l2_mu_vtx_matchingScore                                      208.89  cover=3576.2
+11    l3_tk_OI_qoverpErr                                           136.81  cover=2624.5
+12    l3_tk_OI_etaErr                                              133.99  cover=3270.9
+13    l3_tk_OI_impactSignificance                                  117.87  cover=4993.1
+14    l3_tk_OI_chi2PerHit                                          117.31  cover=1788.0
+15    l3_tk_OI_dzErr                                               114.27  cover=3543.7
+16    l3_tk_OI_p                                                    90.82  cover=2510.8
+17    l3_tk_OI_phiErr                                               88.49  cover=2705.8
+18    l3_tk_OI_eta                                                  87.80  cover=3684.3
+19    l3_tk_OI_dszErr                                               82.24  cover=2487.0
+20    l3_tk_OI_dxyErr                                               69.27  cover=2670.8
+21    l3_tk_OI_lambdaErr                                            46.16  cover=1550.0
+22    l2_mu_vtx_hasMatch                                            26.73  cover=1479.5

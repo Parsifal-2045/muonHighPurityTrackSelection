@@ -1,0 +1,217 @@
+Logging to /shared/training/muonHighPurityTrackSelection/production/io/seeds/train.log
+======================================================================
+IO seeds forest  ->  /shared/training/muonHighPurityTrackSelection/production/io/seeds/
+======================================================================
+  git ad9361e5e2ac716f4b9889f33df6984993e92d75 (dirty=True)  xgboost 2.1.4
+Loading cached features from /tmp/lferragi/muonhp_feature_cache/io_seeds_b9055a945548e51e.npz (key b9055a945548e51e)
+  20353273 tracks x 44 features, 24 input files
+
+Features: 33 (dropped 11); order matches the CMSSW extractor
+  ['muon_general_tracks_p', 'muon_general_tracks_pt', 'muon_general_tracks_etaErr', 'muon_general_tracks_phiErr', 'muon_general_tracks_dzErr', 'muon_general_tracks_qoverpErr', 'muon_general_tracks_lambdaErr', 'muon_general_tracks_nPixelHits', 'muon_general_tracks_nTrkLays', 'muon_general_tracks_nFoundHits', 'muon_general_tracks_impact3D', 'muon_general_tracks_sigmaPtOverPt', 'muon_general_tracks_sip2D', 'muon_general_tracks_sipZ', 'muon_general_tracks_dxyOverPt', 'muon_general_tracks_ptErrOverP', 'muon_general_tracks_dzOverDxy', 'muon_general_tracks_absEta', 'L1TkMu_nStubs', 'L1TkMu_nStubs_Endcap', 'L1TkMu_nStubs_Barrel', 'L1TkMu_stubQual_max', 'L1TkMu_stubMax_etaRegion', 'L1TkMu_stubMax_phiRegion', 'L1TkMu_stubMax_depthRegion', 'L1TkMu_hasMatch', 'L1TkMu_dR2min', 'L1TkMu_dPtNorm', 'L1TkMu_chi2Pt', 'L1TkMu_matchingScore', 'L1TkMu_nCompatible', 'L1TkMu_secondBest_dR2', 'is_low_pt']
+
+Sample weights: signal mean 2.987, background mean 0.597; pT < 5 GeV tracks: 86.7%
+  train:  12631462 tracks ( 2068285 signal, 16.4%) in 1505522 events
+  val  :   1986554 tracks (  341572 signal, 17.2%) in 249687 events
+  test :   5735257 tracks ( 1020262 signal, 17.8%) in 746686 events
+
+======================================================================
+XGBOOST TRAINING
+======================================================================
+  params: {'objective': 'binary:logistic', 'eval_metric': ['aucpr', 'auc', 'logloss'], 'tree_method': 'hist', 'max_depth': 12, 'learning_rate': 0.2, 'subsample': 0.8, 'colsample_bytree': 0.8, 'min_child_weight': 1.0, 'reg_alpha': 0.0, 'reg_lambda': 1.0, 'max_bin': 256, 'seed': 42, 'device': 'cuda'}
+  budget: 5000 trees (no early stopping; size chosen on validation)
+[0]	train-aucpr:0.99175	train-auc:0.98982	train-logloss:0.53351	val-aucpr:0.99160	val-auc:0.98927	val-logloss:0.53392
+[250]	train-aucpr:0.99995	train-auc:0.99995	train-logloss:0.01057	val-aucpr:0.99867	val-auc:0.99830	val-logloss:0.04796
+[500]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00359	val-aucpr:0.99892	val-auc:0.99860	val-logloss:0.05054
+[750]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00160	val-aucpr:0.99902	val-auc:0.99873	val-logloss:0.05393
+[1000]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00089	val-aucpr:0.99906	val-auc:0.99878	val-logloss:0.05664
+[1250]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00057	val-aucpr:0.99908	val-auc:0.99880	val-logloss:0.05893
+[1500]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00040	val-aucpr:0.99910	val-auc:0.99881	val-logloss:0.06075
+[1750]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00030	val-aucpr:0.99910	val-auc:0.99881	val-logloss:0.06237
+[2000]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00024	val-aucpr:0.99911	val-auc:0.99882	val-logloss:0.06378
+[2250]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00020	val-aucpr:0.99911	val-auc:0.99883	val-logloss:0.06502
+[2500]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00016	val-aucpr:0.99911	val-auc:0.99883	val-logloss:0.06627
+[2750]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00014	val-aucpr:0.99911	val-auc:0.99882	val-logloss:0.06738
+[3000]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00012	val-aucpr:0.99911	val-auc:0.99882	val-logloss:0.06834
+[3250]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00011	val-aucpr:0.99911	val-auc:0.99882	val-logloss:0.06923
+[3500]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00009	val-aucpr:0.99912	val-auc:0.99882	val-logloss:0.07013
+[3750]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00009	val-aucpr:0.99911	val-auc:0.99882	val-logloss:0.07091
+[4000]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00008	val-aucpr:0.99911	val-auc:0.99881	val-logloss:0.07171
+[4250]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00007	val-aucpr:0.99911	val-auc:0.99881	val-logloss:0.07245
+[4500]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00006	val-aucpr:0.99911	val-auc:0.99880	val-logloss:0.07310
+[4750]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00006	val-aucpr:0.99911	val-auc:0.99880	val-logloss:0.07371
+[4999]	train-aucpr:1.00000	train-auc:1.00000	train-logloss:0.00006	val-aucpr:0.99911	val-auc:0.99880	val-logloss:0.07426
+  trained 5000 trees on cuda in 519.8s
+
+======================================================================
+FOREST SIZE (validation F2 at validation-chosen per-bin WPs)
+======================================================================
+  100:0.98051 150:0.98258 200:0.98398 250:0.98522 300:0.98612 350:0.98685 400:0.98748 450:0.98795 500:0.98839 550:0.98874 600:0.98899 650:0.98929 700:0.98950 750:0.98969 800:0.98986 850:0.98996 900:0.99010 950:0.99018 1000:0.99030 1050:0.99037 1100:0.99046 1150:0.99050 1200:0.99054 1250:0.99061 1300:0.99064 1350:0.99069 1400:0.99075 1450:0.99080 1500:0.99083 1550:0.99084 1600:0.99091 1650:0.99093 1700:0.99094 1750:0.99097 1800:0.99100 1850:0.99100 1900:0.99102 1950:0.99106 2000:0.99108 2050:0.99111 2100:0.99113 2150:0.99118 2200:0.99118 2250:0.99121 2300:0.99122 2350:0.99125 2400:0.99128 2450:0.99129 2500:0.99129 2550:0.99131 2600:0.99129 2650:0.99130 2700:0.99131 2750:0.99135 2800:0.99134 2850:0.99136 2900:0.99137 2950:0.99138 3000:0.99137 3050:0.99137 3100:0.99139 3150:0.99141 3200:0.99142 3250:0.99141 3300:0.99143 3350:0.99146 3400:0.99146 3450:0.99147 3500:0.99149 3550:0.99147 3600:0.99148 3650:0.99148 3700:0.99149 3750:0.99149 3800:0.99149 3850:0.99151 3900:0.99150 3950:0.99152 4000:0.99152 4050:0.99151 4100:0.99153 4150:0.99153 4200:0.99154 4250:0.99154 4300:0.99155 4350:0.99156 4400:0.99155 4450:0.99155 4500:0.99156 4550:0.99157 4600:0.99157 4650:0.99157 4700:0.99157 4750:0.99159 4800:0.99159 4850:0.99160 4900:0.99160 4950:0.99159 5000:0.99160
+  best prefix 4900 (val F2 0.99160); smallest within 0.001: 1250 trees
+
+======================================================================
+WORKING POINTS (validation only)
+======================================================================
+    pT [   0.0,    2) GeV: thr=0.035900  n_sig=1640  n=483036
+    pT [   2.0,    5) GeV: thr=0.166241  n_sig=98588  n=1231920
+    pT [   5.0,   10) GeV: thr=0.346932  n_sig=87105  n=114750
+    pT [  10.0,   50) GeV: thr=0.470598  n_sig=37745  n=40082
+    pT [  50.0,  200) GeV: thr=0.560072  n_sig=47743  n=47972
+    pT [ 200.0,  inf) GeV: thr=0.855624  n_sig=68751  n=68794
+
+======================================================================
+TEST (frozen model + working points)
+======================================================================
+  ROC-AUC 0.999524  PR-AUC 0.998801
+  @global F2 WP   : P=0.9801 R=0.9931 F2=0.9904 fake rejection=0.9956
+  @per-bin F2 WPs : P=0.9803 R=0.9930 F2=0.9905 fake rejection=0.9957
+
+              precision    recall  f1-score   support
+
+           0     0.9985    0.9957    0.9971   4714995
+           1     0.9803    0.9930    0.9866   1020262
+
+    accuracy                         0.9952   5735257
+   macro avg     0.9894    0.9944    0.9919   5735257
+weighted avg     0.9953    0.9952    0.9952   5735257
+
+
+  per working-point bin (per-bin WPs)
+        pT bin         N    N sig    Prec     Rec      F2  FakeRej     FN      FP
+           0-2   1401498     4379  0.8960  0.7787  0.7996   0.9997    969     396
+           2-5   3516697   288598  0.9418  0.9807  0.9727   0.9946   5570   17496
+          5-10    344704   261967  0.9923  0.9984  0.9972   0.9756    420    2021
+         10-50    118972   112626  0.9972  0.9990  0.9986   0.9504    112     315
+        50-200    143674   143095  0.9993  0.9998  0.9997   0.8152     28     107
+          >200    209712   209597  0.9999  1.0000  1.0000   0.8870      9      13
+
+  standard reporting bins (per-bin WPs)
+        pT bin         N    N sig    Prec     Rec      F2  FakeRej     FN      FP
+           0-5   4918195   292977  0.9412  0.9777  0.9702   0.9961   6539   17892
+          5-10    344704   261967  0.9923  0.9984  0.9972   0.9756    420    2021
+         10-50    118972   112626  0.9972  0.9990  0.9986   0.9504    112     315
+        50-200    143674   143095  0.9993  0.9998  0.9997   0.8152     28     107
+          >200    209712   209597  0.9999  1.0000  1.0000   0.8870      9      13
+
+  per input file (per-bin WPs):
+    BsToMuMu_1.root        AUC=0.9988 P=0.9444 R=0.9893 F2=0.9800 [TP=8243 FP=485 FN=89 TN=40212]
+    BsToMuMu_2.root        AUC=0.9989 P=0.9494 R=0.9877 F2=0.9798 [TP=8298 FP=442 FN=103 TN=40572]
+    BsToMuMu_3.root        AUC=0.9990 P=0.9528 R=0.9896 F2=0.9820 [TP=8284 FP=410 FN=87 TN=40061]
+    BsToMuMu_4.root        AUC=0.9990 P=0.9509 R=0.9916 F2=0.9832 [TP=8371 FP=432 FN=71 TN=40171]
+    gunHighPt_1.root       AUC=1.0000 P=0.9927 R=0.9998 F2=0.9984 [TP=63298 FP=467 FN=14 TN=220674]
+    gunHighPt_2.root       AUC=1.0000 P=0.9928 R=0.9998 F2=0.9984 [TP=63347 FP=459 FN=10 TN=217424]
+    gunHighPt_3.root       AUC=1.0000 P=0.9927 R=0.9998 F2=0.9984 [TP=62905 FP=460 FN=10 TN=218714]
+    gunHighPt_4.root       AUC=1.0000 P=0.9924 R=0.9998 F2=0.9983 [TP=62904 FP=482 FN=10 TN=216865]
+    gunLowPt_1.root        AUC=0.9980 P=0.9622 R=0.9735 F2=0.9712 [TP=29538 FP=1159 FN=804 TN=223813]
+    gunLowPt_2.root        AUC=0.9979 P=0.9621 R=0.9750 F2=0.9724 [TP=29359 FP=1156 FN=754 TN=224751]
+    gunLowPt_3.root        AUC=0.9982 P=0.9621 R=0.9747 F2=0.9721 [TP=29729 FP=1170 FN=773 TN=224758]
+    gunLowPt_4.root        AUC=0.9980 P=0.9643 R=0.9752 F2=0.9730 [TP=30283 FP=1121 FN=771 TN=227889]
+    gunLowPt_5.root        AUC=0.9976 P=0.9626 R=0.9743 F2=0.9719 [TP=29820 FP=1160 FN=787 TN=226360]
+    gunLowPt_6.root        AUC=0.9979 P=0.9614 R=0.9755 F2=0.9727 [TP=29778 FP=1194 FN=748 TN=224999]
+    gunLowPt_7.root        AUC=0.9983 P=0.9634 R=0.9745 F2=0.9723 [TP=29777 FP=1131 FN=779 TN=223754]
+    gunLowPt_8.root        AUC=0.9982 P=0.9623 R=0.9759 F2=0.9732 [TP=29643 FP=1160 FN=731 TN=225137]
+    gunMediumPt_1.root     AUC=1.0000 P=0.9878 R=0.9985 F2=0.9964 [TP=62504 FP=770 FN=93 TN=229258]
+    gunMediumPt_2.root     AUC=1.0000 P=0.9875 R=0.9984 F2=0.9962 [TP=62415 FP=789 FN=99 TN=229267]
+    gunMediumPt_3.root     AUC=1.0000 P=0.9869 R=0.9984 F2=0.9961 [TP=62417 FP=831 FN=99 TN=228030]
+    gunMediumPt_4.root     AUC=1.0000 P=0.9866 R=0.9981 F2=0.9958 [TP=61600 FP=836 FN=115 TN=229924]
+    gunTeVPt_1.root        AUC=1.0000 P=0.9821 R=0.9994 F2=0.9958 [TP=60017 FP=1095 FN=39 TN=235159]
+    gunTeVPt_2.root        AUC=1.0000 P=0.9825 R=0.9993 F2=0.9959 [TP=60184 FP=1070 FN=45 TN=237250]
+    gunTeVPt_3.root        AUC=1.0000 P=0.9830 R=0.9993 F2=0.9960 [TP=60278 FP=1041 FN=42 TN=234860]
+    gunTeVPt_4.root        AUC=1.0000 P=0.9832 R=0.9994 F2=0.9961 [TP=60162 FP=1028 FN=35 TN=234745]
+
+      pT bin   N total   N sig    Prec     Rec      F2     FN   PR-AUC
+  ------------------------------------------------------------------------
+         0-5   4918195  292977  0.9412  0.9777  0.9702   6539   0.9920
+        5-10    344704  261967  0.9923  0.9984  0.9972    420   0.9999
+       10-50    118972  112626  0.9972  0.9990  0.9986    112   1.0000
+      50-200    143674  143095  0.9993  0.9998  0.9997     28   1.0000
+        >200    209712  209597  0.9999  1.0000  1.0000      9   1.0000
+  Saved: /shared/training/muonHighPurityTrackSelection/production/io/seeds/pt_bin_performance.png
+
+======================================================================
+EXPORTS
+======================================================================
+  model_compact.bin: 1919368 nodes, 1250 trees, baseLogit=-0.00841693, 24372 KB, md5 8c936b2ef077e5501f18c6676b5c0cc1
+  .bin replay (CMSSW traversal) on 303742 test rows (3939 within 0.02 of their WP): max|diff|=2.98e-07, WP decision flips=0 [94.7s]
+  ONNX vs XGBoost on 100000 test rows: max|diff|=9.54e-07; single-track latency (1 thread): 112 us
+
+======================================================================
+FEATURE IMPORTANCE
+======================================================================
+  1   L1TkMu_nStubs                                     2062.28  cover=3887.8
+  2   L1TkMu_nStubs_Endcap                               857.69  cover=4835.8
+  3   is_low_pt                                          187.06  cover=1521.9
+  4   muon_general_tracks_pt                             152.32  cover=1354.1
+  5   L1TkMu_nCompatible                                 122.51  cover=4289.9
+  6   L1TkMu_stubQual_max                                122.23  cover=2551.3
+  7   L1TkMu_secondBest_dR2                               54.68  cover=3011.9
+  8   L1TkMu_nStubs_Barrel                                42.56  cover=3574.7
+  9   L1TkMu_stubMax_depthRegion                          31.27  cover=1269.9
+  10  L1TkMu_matchingScore                                28.71  cover=722.5
+  11  muon_general_tracks_qoverpErr                       23.68  cover=765.2
+  12  muon_general_tracks_absEta                          19.03  cover=973.5
+  13  muon_general_tracks_nPixelHits                      16.56  cover=500.8
+  14  muon_general_tracks_p                               16.32  cover=777.7
+  15  L1TkMu_dR2min                                       16.17  cover=538.6
+  16  muon_general_tracks_ptErrOverP                      14.13  cover=588.1
+  17  muon_general_tracks_etaErr                          13.73  cover=648.8
+  18  muon_general_tracks_nTrkLays                        13.52  cover=664.4
+  19  muon_general_tracks_lambdaErr                       12.61  cover=740.2
+  20  muon_general_tracks_sip2D                           12.57  cover=563.6
+  21  muon_general_tracks_impact3D                        12.56  cover=1760.8
+  22  L1TkMu_stubMax_phiRegion                            12.23  cover=470.2
+  23  muon_general_tracks_sigmaPtOverPt                   12.04  cover=572.3
+  24  muon_general_tracks_nFoundHits                      11.84  cover=600.2
+  25  L1TkMu_stubMax_etaRegion                            11.62  cover=677.6
+  26  muon_general_tracks_dxyOverPt                       10.65  cover=644.7
+  27  muon_general_tracks_dzErr                           10.53  cover=603.0
+  28  muon_general_tracks_phiErr                          10.46  cover=696.5
+  29  muon_general_tracks_dzOverDxy                        9.40  cover=369.9
+  30  muon_general_tracks_sipZ                             9.33  cover=589.3
+  31  L1TkMu_dPtNorm                                       9.17  cover=298.5
+  32  L1TkMu_chi2Pt                                        6.52  cover=312.1
+  33  L1TkMu_hasMatch                                      0.18  cover=3.0
+  Saved: /shared/training/muonHighPurityTrackSelection/production/io/seeds/feat_imp_all.png
+
+  permutation importance (PR-AUC drop), pT < 5 GeV test subset (4918195 tracks):
+    [00] muon_general_tracks_p                         dPR-AUC=+0.01078 +/- 0.00009
+    [01] muon_general_tracks_pt                        dPR-AUC=+0.01162 +/- 0.00005
+    [02] muon_general_tracks_etaErr                    dPR-AUC=+0.00379 +/- 0.00002
+    [03] muon_general_tracks_phiErr                    dPR-AUC=+0.00400 +/- 0.00002
+    [04] muon_general_tracks_dzErr                     dPR-AUC=+0.00583 +/- 0.00001
+    [05] muon_general_tracks_qoverpErr                 dPR-AUC=+0.00413 +/- 0.00005
+    [06] muon_general_tracks_lambdaErr                 dPR-AUC=+0.00437 +/- 0.00003
+    [07] muon_general_tracks_nPixelHits                dPR-AUC=+0.00167 +/- 0.00002
+    [08] muon_general_tracks_nTrkLays                  dPR-AUC=+0.00138 +/- 0.00001
+    [09] muon_general_tracks_nFoundHits                dPR-AUC=+0.00242 +/- 0.00002
+    [10] muon_general_tracks_impact3D                  dPR-AUC=+0.02215 +/- 0.00013
+    [11] muon_general_tracks_sigmaPtOverPt             dPR-AUC=+0.00445 +/- 0.00003
+    [12] muon_general_tracks_sip2D                     dPR-AUC=+0.00385 +/- 0.00002
+    [13] muon_general_tracks_sipZ                      dPR-AUC=+0.00471 +/- 0.00001
+    [14] muon_general_tracks_dxyOverPt                 dPR-AUC=+0.00350 +/- 0.00002
+    [15] muon_general_tracks_ptErrOverP                dPR-AUC=+0.00390 +/- 0.00004
+    [16] muon_general_tracks_dzOverDxy                 dPR-AUC=+0.00277 +/- 0.00003
+    [17] muon_general_tracks_absEta                    dPR-AUC=+0.05258 +/- 0.00022
+    [18] L1TkMu_nStubs                                 dPR-AUC=+0.00244 +/- 0.00002
+    [19] L1TkMu_nStubs_Endcap                          dPR-AUC=+0.00296 +/- 0.00002
+    [20] L1TkMu_nStubs_Barrel                          dPR-AUC=+0.00083 +/- 0.00002
+    [21] L1TkMu_stubQual_max                           dPR-AUC=+0.00163 +/- 0.00002
+    [22] L1TkMu_stubMax_etaRegion                      dPR-AUC=+0.00183 +/- 0.00003
+    [23] L1TkMu_stubMax_phiRegion                      dPR-AUC=+0.00108 +/- 0.00002
+    [24] L1TkMu_stubMax_depthRegion                    dPR-AUC=+0.00238 +/- 0.00003
+    [25] L1TkMu_hasMatch                               dPR-AUC=-0.00000 +/- 0.00000
+    [26] L1TkMu_dR2min                                 dPR-AUC=+0.00911 +/- 0.00007
+    [27] L1TkMu_dPtNorm                                dPR-AUC=+0.00033 +/- 0.00001
+    [28] L1TkMu_chi2Pt                                 dPR-AUC=+0.00078 +/- 0.00001
+    [29] L1TkMu_matchingScore                          dPR-AUC=+0.00047 +/- 0.00002
+    [30] L1TkMu_nCompatible                            dPR-AUC=+0.00780 +/- 0.00006
+    [31] L1TkMu_secondBest_dR2                         dPR-AUC=+0.00356 +/- 0.00002
+    [32] is_low_pt                                     dPR-AUC=+0.01306 +/- 0.00006
+  Saved: /shared/training/muonHighPurityTrackSelection/production/io/seeds/feat_imp_lowpt.png
+  [356s]
+
+======================================================================
+REFERENCE FOREST (same split, own val-derived WPs)
+======================================================================
+  Reference /shared/training/muonHighPurityTrackSelection/production/io/archive/seeds_xgb_output_33f_v2/model.json (4050 trees): ROC-AUC=0.999131 PR-AUC=0.997526 @per-bin WPs P=0.9613 R=0.9888 F2=0.9832
+
+Done in 1133s -> /shared/training/muonHighPurityTrackSelection/production/io/seeds/

@@ -1,0 +1,320 @@
+{
+  "flavour": "OI general",
+  "started": "2026-09-23 00:47:46",
+  "host": "h100",
+  "user": "lferragi",
+  "python": "3.9.25",
+  "git_commit": "ad9361e5e2ac716f4b9889f33df6984993e92d75",
+  "git_dirty": true,
+  "packages": {
+    "xgboost": "2.1.4",
+    "numpy": "2.0.2",
+    "scikit-learn": "1.6.1",
+    "awkward": "2.8.12",
+    "uproot": "5.6.9",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.19.2",
+    "onnxmltools": "1.16.0"
+  },
+  "cuda_visible_devices": "0",
+  "gpu": "NVIDIA H100 NVL",
+  "available_cpus": 94,
+  "config": {
+    "signal_boost": 5.0,
+    "kin_weight_max": 20.0,
+    "max_depth": 10,
+    "learning_rate": 0.1,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 1.0,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0,
+    "max_bin": 256,
+    "seed": 42,
+    "n_estimators": 5000,
+    "prune_tol": 0.001,
+    "prune_grid_step": 50,
+    "prune_min_trees": 100,
+    "device": "cuda",
+    "split_mode": "evt10",
+    "split_seed_offset": 0,
+    "pt_threshold_edges": [
+      0.0,
+      2.0,
+      5.0,
+      10.0,
+      50.0,
+      200.0
+    ],
+    "min_bin_signal": 100,
+    "onnx_opset": 13,
+    "compact_bin_fp16": false,
+    "permutation_importance": true,
+    "perm_repeats": 5,
+    "ref_model_path": "/shared/training/muonHighPurityTrackSelection/production/oi/archive/general_22f_v2/model.json",
+    "verbose_eval": 250,
+    "branches": [
+      "l3_tk_OI_p",
+      "l3_tk_OI_pt",
+      "l3_tk_OI_ptErr",
+      "l3_tk_OI_eta",
+      "l3_tk_OI_etaErr",
+      "l3_tk_OI_phi",
+      "l3_tk_OI_phiErr",
+      "l3_tk_OI_chi2",
+      "l3_tk_OI_normalizedChi2",
+      "l3_tk_OI_nPixelHits",
+      "l3_tk_OI_nTrkLays",
+      "l3_tk_OI_nFoundHits",
+      "l3_tk_OI_nLostHits",
+      "l3_tk_OI_dsz",
+      "l3_tk_OI_dszErr",
+      "l3_tk_OI_dxy",
+      "l3_tk_OI_dxyErr",
+      "l3_tk_OI_dz",
+      "l3_tk_OI_dzErr",
+      "l3_tk_OI_qoverp",
+      "l3_tk_OI_qoverpErr",
+      "l3_tk_OI_lambdaErr",
+      "l3_tk_OI_matched",
+      "l3_tk_OI_duplicate",
+      "l3_tk_OI_tpPdgId",
+      "l3_tk_OI_tpPt",
+      "l3_tk_OI_tpEta",
+      "l3_tk_OI_tpPhi",
+      "l2_mu_vtx_pt",
+      "l2_mu_vtx_ptErr",
+      "l2_mu_vtx_eta",
+      "l2_mu_vtx_etaErr",
+      "l2_mu_vtx_phi",
+      "l2_mu_vtx_phiErr",
+      "l2_mu_vtx_dz",
+      "l2_mu_vtx_dzErr"
+    ],
+    "build_kwargs": {
+      "useStandaloneFeatures": true
+    },
+    "pt_feature": "l3_tk_OI_pt",
+    "drop_features": [
+      "l3_tk_OI_chi2",
+      "l3_tk_OI_ptErr",
+      "l3_tk_OI_sigmaPtOverPt",
+      "l3_tk_OI_relUncertaintyProduct"
+    ],
+    "production_features": [
+      "l3_tk_OI_p",
+      "l3_tk_OI_pt",
+      "l3_tk_OI_normalizedChi2",
+      "l3_tk_OI_etaErr",
+      "l3_tk_OI_phiErr",
+      "l3_tk_OI_dszErr",
+      "l3_tk_OI_dxyErr",
+      "l3_tk_OI_dzErr",
+      "l3_tk_OI_qoverpErr",
+      "l3_tk_OI_lambdaErr",
+      "l3_tk_OI_eta",
+      "l3_tk_OI_nPixelHits",
+      "l3_tk_OI_nTrkLays",
+      "l3_tk_OI_nFoundHits",
+      "l3_tk_OI_nLostHits",
+      "l3_tk_OI_impact3D",
+      "l3_tk_OI_impactSignificance",
+      "l3_tk_OI_chi2PerHit",
+      "l3_tk_OI_hitEfficiency",
+      "l2_mu_vtx_hasMatch",
+      "l2_mu_vtx_matchingScore",
+      "is_low_pt"
+    ],
+    "cmssw_cfi": "HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2L3OIMuonTrackSelectionHighPurityForest_cfi.py",
+    "name": "OI general",
+    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
+    "output_dir": "/shared/training/muonHighPurityTrackSelection/production/oi/general/",
+    "cache_tag": "oi_general",
+    "cmssw_bin": "RecoMuon/L3TrackFinder/data/OI/muonHP_OI_seedsPath_forest_v3.bin"
+  },
+  "inputs": {
+    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
+    "cache_key": "96d2fb1d6f4379352b4458410e505237977da64ab981986a5180ef95c1ed2ccf",
+    "cache_path": "/tmp/lferragi/muonhp_feature_cache/oi_general_96d2fb1d6f437935.npz",
+    "cache_hit": true,
+    "files": [
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_1.root",
+        "size": 4380917666,
+        "mtime_ns": 1778750031403171201
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_2.root",
+        "size": 4387547325,
+        "mtime_ns": 1778750044605907962
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_3.root",
+        "size": 4372292602,
+        "mtime_ns": 1778750057874643407
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_4.root",
+        "size": 4387054887,
+        "mtime_ns": 1778750071996361847
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_1.root",
+        "size": 10261178662,
+        "mtime_ns": 1776156208823532114
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_2.root",
+        "size": 10258010290,
+        "mtime_ns": 1776160920506303746
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_3.root",
+        "size": 10258089735,
+        "mtime_ns": 1776165625626128359
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_4.root",
+        "size": 10256463719,
+        "mtime_ns": 1776170371768145813
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_1.root",
+        "size": 10206983977,
+        "mtime_ns": 1776270749073542956
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_2.root",
+        "size": 10206520542,
+        "mtime_ns": 1776275427629885831
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_3.root",
+        "size": 10208212266,
+        "mtime_ns": 1776280112988115592
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_4.root",
+        "size": 10206196443,
+        "mtime_ns": 1776284799182347969
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_5.root",
+        "size": 10208010225,
+        "mtime_ns": 1776289494617365811
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_6.root",
+        "size": 10209324140,
+        "mtime_ns": 1776294182938535395
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_7.root",
+        "size": 10207382019,
+        "mtime_ns": 1776298853383114164
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_8.root",
+        "size": 10206454704,
+        "mtime_ns": 1776303504986039714
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_1.root",
+        "size": 10246590344,
+        "mtime_ns": 1776270768102162059
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_2.root",
+        "size": 10252169735,
+        "mtime_ns": 1776275476342910703
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_3.root",
+        "size": 10251351371,
+        "mtime_ns": 1776280169494984754
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_4.root",
+        "size": 10250086831,
+        "mtime_ns": 1776284900161326368
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_1.root",
+        "size": 10348619576,
+        "mtime_ns": 1776329264257452689
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_2.root",
+        "size": 10360140347,
+        "mtime_ns": 1776334003860627530
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_3.root",
+        "size": 10349413466,
+        "mtime_ns": 1776338767003321666
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_4.root",
+        "size": 10359577387,
+        "mtime_ns": 1776343520755214526
+      }
+    ]
+  },
+  "split": {
+    "train": {
+      "tracks": 4374126,
+      "signal": 353112,
+      "events": 961576
+    },
+    "val": {
+      "tracks": 665956,
+      "signal": 58288,
+      "events": 153339
+    },
+    "test": {
+      "tracks": 1881378,
+      "signal": 174538,
+      "events": 447712
+    }
+  },
+  "device_used": "cuda",
+  "train_seconds": 202.6,
+  "verification": {
+    "compact_bin": {
+      "rows_checked": 300272,
+      "near_threshold_rows": 348,
+      "max_abs_diff": 6.854534149169922e-07,
+      "decision_flips": 0,
+      "seconds": 16.3
+    },
+    "onnx": {
+      "rows_checked": 100000,
+      "max_abs_diff": 4.172325134277344e-07,
+      "single_track_us": 8.3
+    }
+  },
+  "outputs": {
+    "model.json": "0a54c75aa7fbaa520adc2a0536077816",
+    "model_compact.bin": "78fa350f5572eecb31e3498cb72f51fa",
+    "model_xgb.onnx": "aece42b486828488d296cc095964e03e",
+    "thresholds.json": "5fb67b4f33d471a38667457440b559c2"
+  },
+  "reference": {
+    "path": "/shared/training/muonHighPurityTrackSelection/production/oi/archive/general_22f_v2/model.json",
+    "trees": 850,
+    "roc_auc": 0.9998195089520978,
+    "pr_auc": 0.9988384673955089,
+    "perbin_wp": {
+      "precision": 0.9837859610648403,
+      "recall": 0.993531494568555,
+      "f2": 0.9915667707090225,
+      "fake_rejection": 0.9983255606852429,
+      "tp": 173409,
+      "fp": 2858,
+      "fn": 1129,
+      "tn": 1703982
+    }
+  },
+  "total_seconds": 304.9,
+  "finished": "2026-09-23 00:52:50"
+}

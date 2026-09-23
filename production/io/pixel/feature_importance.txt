@@ -1,38 +1,73 @@
-Baseline PR-AUC: 0.999312
-Test ROC-AUC: 0.999561
+Test PR-AUC: 0.999626
+Test ROC-AUC: 0.999766
 
-Rank  Feature                                                        Gain
--------------------------------------------------------------------------
-1     L1TkMu_nStubs                                               4303.53  cover=15063.2
-2     L1TkMu_nStubs_Endcap                                        2082.56  cover=15139.7
-3     is_low_pt                                                    962.95  cover=12379.9
-4     L1TkMu_stubQual_max                                          222.46  cover=14721.7
-5     muon_pixel_tracks_pt                                         179.94  cover=6078.0
-6     L1TkMu_secondBest_dR2                                        169.77  cover=13653.4
-7     L1TkMu_nStubs_Barrel                                         161.52  cover=25912.1
-8     muon_pixel_tracks_phiErr                                     126.24  cover=6636.6
-9     muon_pixel_tracks_absEta                                     110.78  cover=8191.4
-10    L1TkMu_stubMax_depthRegion                                    93.95  cover=9675.0
-11    muon_pixel_tracks_etaErr                                      82.24  cover=6934.4
-12    L1TkMu_matchingScore                                          74.37  cover=6352.4
-13    muon_pixel_tracks_p                                           70.39  cover=7400.9
-14    muon_pixel_tracks_sip2D                                       62.70  cover=6115.5
-15    L1TkMu_stubMax_phiRegion                                      62.42  cover=4719.0
-16    muon_pixel_tracks_dzErr                                       60.91  cover=6664.0
-17    muon_pixel_tracks_nFoundHits                                  59.72  cover=5742.1
-18    L1TkMu_dR2min                                                 59.68  cover=4970.4
-19    muon_pixel_tracks_qoverpErr                                   58.43  cover=6904.8
-20    muon_pixel_tracks_nPixelHits                                  58.20  cover=5582.7
-21    muon_pixel_tracks_impact3D                                    57.57  cover=13272.1
-22    muon_pixel_tracks_sigmaPtOverPt                               56.70  cover=6797.5
-23    muon_pixel_tracks_dxyOverPt                                   55.73  cover=5029.2
-24    L1TkMu_dPtNorm                                                50.76  cover=6041.0
-25    L1TkMu_stubMax_etaRegion                                      49.89  cover=8679.7
-26    muon_pixel_tracks_ptErrOverP                                  49.09  cover=5692.7
-27    muon_pixel_tracks_lambdaErr                                   47.39  cover=5981.5
-28    L1TkMu_chi2Pt                                                 46.72  cover=5601.8
-29    muon_pixel_tracks_nTrkLays                                    45.00  cover=6046.3
-30    L1TkMu_nCompatible                                            43.38  cover=17469.4
-31    muon_pixel_tracks_sipZ                                        37.12  cover=6266.7
-32    muon_pixel_tracks_dzOverDxy                                   34.48  cover=5175.2
-33    L1TkMu_hasMatch                                                0.31  cover=3.5
+Rank  Feature                                              Gain       Cover
+---------------------------------------------------------------------------
+1     L1TkMu_nStubs                                      813.80      1798.8
+2     L1TkMu_nStubs_Endcap                               473.98      2332.8
+3     is_low_pt                                           78.22       876.1
+4     muon_pixel_tracks_pt                                77.95       561.4
+5     L1TkMu_stubQual_max                                 53.10      1667.9
+6     L1TkMu_secondBest_dR2                               26.60      1230.0
+7     L1TkMu_nStubs_Barrel                                24.52      1571.5
+8     muon_pixel_tracks_absEta                            20.86       658.1
+9     L1TkMu_stubMax_depthRegion                          19.46       950.6
+10    muon_pixel_tracks_phiErr                            18.93       415.6
+11    muon_pixel_tracks_etaErr                            14.86       369.8
+12    muon_pixel_tracks_nFoundHits                        14.75       331.8
+13    muon_pixel_tracks_p                                 13.06       416.5
+14    L1TkMu_nCompatible                                  12.92      1630.0
+15    muon_pixel_tracks_sigmaPtOverPt                     12.43       381.8
+16    muon_pixel_tracks_nPixelHits                        11.91       359.6
+17    L1TkMu_stubMax_etaRegion                            11.13       427.7
+18    muon_pixel_tracks_nTrkLays                          11.11       275.3
+19    L1TkMu_stubMax_phiRegion                            10.40       279.5
+20    muon_pixel_tracks_lambdaErr                         10.06       326.5
+21    muon_pixel_tracks_dxyOverPt                          9.99       245.9
+22    muon_pixel_tracks_ptErrOverP                         9.67       281.3
+23    muon_pixel_tracks_qoverpErr                          9.49       351.0
+24    muon_pixel_tracks_dzErr                              9.28       326.7
+25    L1TkMu_matchingScore                                 8.42       361.6
+26    L1TkMu_dPtNorm                                       8.13       287.4
+27    L1TkMu_chi2Pt                                        8.08       286.3
+28    muon_pixel_tracks_sip2D                              7.93       280.0
+29    muon_pixel_tracks_impact3D                           7.71       973.6
+30    muon_pixel_tracks_sipZ                               6.95       258.6
+31    L1TkMu_dR2min                                        6.87       251.5
+32    muon_pixel_tracks_dzOverDxy                          6.00       204.6
+33    L1TkMu_hasMatch                                      0.10         2.7
+
+Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
+  muon_pixel_tracks_absEta                     +0.02025 +/- 0.00011
+  L1TkMu_secondBest_dR2                        +0.00565 +/- 0.00004
+  muon_pixel_tracks_impact3D                   +0.00507 +/- 0.00002
+  L1TkMu_nStubs                                +0.00439 +/- 0.00003
+  L1TkMu_stubMax_depthRegion                   +0.00431 +/- 0.00003
+  L1TkMu_stubQual_max                          +0.00397 +/- 0.00002
+  is_low_pt                                    +0.00386 +/- 0.00003
+  muon_pixel_tracks_pt                         +0.00303 +/- 0.00003
+  L1TkMu_nStubs_Endcap                         +0.00259 +/- 0.00003
+  L1TkMu_stubMax_etaRegion                     +0.00255 +/- 0.00001
+  muon_pixel_tracks_p                          +0.00178 +/- 0.00002
+  muon_pixel_tracks_ptErrOverP                 +0.00171 +/- 0.00001
+  muon_pixel_tracks_lambdaErr                  +0.00142 +/- 0.00002
+  L1TkMu_dPtNorm                               +0.00130 +/- 0.00001
+  L1TkMu_chi2Pt                                +0.00130 +/- 0.00001
+  muon_pixel_tracks_etaErr                     +0.00127 +/- 0.00002
+  muon_pixel_tracks_dzErr                      +0.00119 +/- 0.00001
+  muon_pixel_tracks_qoverpErr                  +0.00115 +/- 0.00001
+  muon_pixel_tracks_sigmaPtOverPt              +0.00112 +/- 0.00001
+  L1TkMu_stubMax_phiRegion                     +0.00110 +/- 0.00001
+  L1TkMu_matchingScore                         +0.00105 +/- 0.00002
+  muon_pixel_tracks_phiErr                     +0.00104 +/- 0.00001
+  muon_pixel_tracks_sip2D                      +0.00096 +/- 0.00001
+  muon_pixel_tracks_dzOverDxy                  +0.00091 +/- 0.00001
+  muon_pixel_tracks_sipZ                       +0.00090 +/- 0.00001
+  L1TkMu_dR2min                                +0.00087 +/- 0.00001
+  muon_pixel_tracks_dxyOverPt                  +0.00078 +/- 0.00001
+  L1TkMu_nStubs_Barrel                         +0.00046 +/- 0.00001
+  muon_pixel_tracks_nFoundHits                 +0.00023 +/- 0.00000
+  muon_pixel_tracks_nPixelHits                 +0.00021 +/- 0.00000
+  L1TkMu_nCompatible                           +0.00015 +/- 0.00000
+  muon_pixel_tracks_nTrkLays                   +0.00011 +/- 0.00000
+  L1TkMu_hasMatch                              +0.00000 +/- 0.00000

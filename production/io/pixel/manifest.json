@@ -1,0 +1,341 @@
+{
+  "flavour": "IO pixel",
+  "started": "2026-09-23 00:35:44",
+  "host": "h100",
+  "user": "lferragi",
+  "python": "3.9.25",
+  "git_commit": "ad9361e5e2ac716f4b9889f33df6984993e92d75",
+  "git_dirty": true,
+  "packages": {
+    "xgboost": "2.1.4",
+    "numpy": "2.0.2",
+    "scikit-learn": "1.6.1",
+    "awkward": "2.8.12",
+    "uproot": "5.6.9",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.19.2",
+    "onnxmltools": "1.16.0"
+  },
+  "cuda_visible_devices": "1",
+  "gpu": "NVIDIA H100 NVL",
+  "available_cpus": 94,
+  "config": {
+    "signal_boost": 5.0,
+    "kin_weight_max": 20.0,
+    "max_depth": 12,
+    "learning_rate": 0.2,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 1.0,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0,
+    "max_bin": 256,
+    "seed": 42,
+    "n_estimators": 5000,
+    "prune_tol": 0.001,
+    "prune_grid_step": 50,
+    "prune_min_trees": 100,
+    "device": "cuda",
+    "split_mode": "evt10",
+    "split_seed_offset": 0,
+    "pt_threshold_edges": [
+      0.0,
+      2.0,
+      5.0,
+      10.0,
+      50.0,
+      200.0
+    ],
+    "min_bin_signal": 100,
+    "onnx_opset": 13,
+    "compact_bin_fp16": false,
+    "permutation_importance": true,
+    "perm_repeats": 5,
+    "ref_model_path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/pixel_xgb_output_33f_v2/model.json",
+    "verbose_eval": 250,
+    "name": "IO pixel",
+    "data_dir": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/",
+    "output_dir": "/shared/training/muonHighPurityTrackSelection/production/io/pixel/",
+    "cache_tag": "io_pixel",
+    "branches": [
+      "muon_pixel_tracks_p",
+      "muon_pixel_tracks_pt",
+      "muon_pixel_tracks_ptErr",
+      "muon_pixel_tracks_eta",
+      "muon_pixel_tracks_etaErr",
+      "muon_pixel_tracks_phi",
+      "muon_pixel_tracks_phiErr",
+      "muon_pixel_tracks_chi2",
+      "muon_pixel_tracks_normalizedChi2",
+      "muon_pixel_tracks_nPixelHits",
+      "muon_pixel_tracks_nTrkLays",
+      "muon_pixel_tracks_nFoundHits",
+      "muon_pixel_tracks_nLostHits",
+      "muon_pixel_tracks_dsz",
+      "muon_pixel_tracks_dszErr",
+      "muon_pixel_tracks_dxy",
+      "muon_pixel_tracks_dxyErr",
+      "muon_pixel_tracks_dz",
+      "muon_pixel_tracks_dzErr",
+      "muon_pixel_tracks_qoverp",
+      "muon_pixel_tracks_qoverpErr",
+      "muon_pixel_tracks_lambdaErr",
+      "muon_pixel_tracks_matched",
+      "muon_pixel_tracks_duplicate",
+      "muon_pixel_tracks_tpPdgId",
+      "muon_pixel_tracks_tpPt",
+      "muon_pixel_tracks_tpEta",
+      "muon_pixel_tracks_tpPhi",
+      "L1TkMu_pt",
+      "L1TkMu_eta",
+      "L1TkMu_phi",
+      "L1TkMuStub_type",
+      "L1TkMuStub_quality",
+      "L1TkMuStub_parentL1TkMu",
+      "L1TkMuStub_etaRegion",
+      "L1TkMuStub_phiRegion",
+      "L1TkMuStub_depthRegion"
+    ],
+    "build_kwargs": {
+      "prefix": "muon_pixel_tracks",
+      "useL1TkMuFeatures": true,
+      "useL1TkMuStubFeatures": true
+    },
+    "pt_feature": "muon_pixel_tracks_pt",
+    "drop_features": [
+      "muon_pixel_tracks_nLostHits",
+      "muon_pixel_tracks_hitEfficiency",
+      "muon_pixel_tracks_normalizedChi2",
+      "muon_pixel_tracks_chi2PerHit",
+      "muon_pixel_tracks_chi2",
+      "muon_pixel_tracks_impactSignificance",
+      "muon_pixel_tracks_dxyErr",
+      "muon_pixel_tracks_dszErr",
+      "muon_pixel_tracks_eta",
+      "muon_pixel_tracks_ptErr",
+      "muon_pixel_tracks_relUncertaintyProduct"
+    ],
+    "production_features": [
+      "muon_pixel_tracks_p",
+      "muon_pixel_tracks_pt",
+      "muon_pixel_tracks_etaErr",
+      "muon_pixel_tracks_phiErr",
+      "muon_pixel_tracks_dzErr",
+      "muon_pixel_tracks_qoverpErr",
+      "muon_pixel_tracks_lambdaErr",
+      "muon_pixel_tracks_nPixelHits",
+      "muon_pixel_tracks_nTrkLays",
+      "muon_pixel_tracks_nFoundHits",
+      "muon_pixel_tracks_impact3D",
+      "muon_pixel_tracks_sigmaPtOverPt",
+      "muon_pixel_tracks_sip2D",
+      "muon_pixel_tracks_sipZ",
+      "muon_pixel_tracks_dxyOverPt",
+      "muon_pixel_tracks_ptErrOverP",
+      "muon_pixel_tracks_dzOverDxy",
+      "muon_pixel_tracks_absEta",
+      "L1TkMu_nStubs",
+      "L1TkMu_nStubs_Endcap",
+      "L1TkMu_nStubs_Barrel",
+      "L1TkMu_stubQual_max",
+      "L1TkMu_stubMax_etaRegion",
+      "L1TkMu_stubMax_phiRegion",
+      "L1TkMu_stubMax_depthRegion",
+      "L1TkMu_hasMatch",
+      "L1TkMu_dR2min",
+      "L1TkMu_dPtNorm",
+      "L1TkMu_chi2Pt",
+      "L1TkMu_matchingScore",
+      "L1TkMu_nCompatible",
+      "L1TkMu_secondBest_dR2",
+      "is_low_pt"
+    ],
+    "cmssw_bin": "RecoMuon/L3TrackFinder/data/IO/muonHP_IO_pixelPath_forest_v3.bin",
+    "cmssw_cfi": "HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2MuonPixelTracksHighPurityForest_cfi.py"
+  },
+  "inputs": {
+    "data_dir": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/",
+    "cache_key": "6ee12bc43d78812b0f0898e02e45a46d0b761c794883753eb4ea59cd7b557826",
+    "cache_path": "/tmp/lferragi/muonhp_feature_cache/io_pixel_6ee12bc43d78812b.npz",
+    "cache_hit": true,
+    "files": [
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/BsToMuMu_1.root",
+        "size": 4357696859,
+        "mtime_ns": 1780162012188559253
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/BsToMuMu_2.root",
+        "size": 4355342760,
+        "mtime_ns": 1780164152778285541
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/BsToMuMu_3.root",
+        "size": 4351314078,
+        "mtime_ns": 1780166279566294375
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/BsToMuMu_4.root",
+        "size": 4343800470,
+        "mtime_ns": 1780168396587485807
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunHighPt_1.root",
+        "size": 10202497479,
+        "mtime_ns": 1780164571941009438
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunHighPt_2.root",
+        "size": 10206975580,
+        "mtime_ns": 1780169267516293018
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunHighPt_3.root",
+        "size": 10205286260,
+        "mtime_ns": 1780174004895834470
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunHighPt_4.root",
+        "size": 10201711849,
+        "mtime_ns": 1780178699514258766
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_1.root",
+        "size": 10155590596,
+        "mtime_ns": 1780172916691289408
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_2.root",
+        "size": 10152507332,
+        "mtime_ns": 1780177599265967545
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_3.root",
+        "size": 10151575930,
+        "mtime_ns": 1780182266120864503
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_4.root",
+        "size": 10152397023,
+        "mtime_ns": 1780186930626970356
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_5.root",
+        "size": 10154790767,
+        "mtime_ns": 1780191624642431561
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_6.root",
+        "size": 10155024879,
+        "mtime_ns": 1780196305732153665
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_7.root",
+        "size": 10152595015,
+        "mtime_ns": 1780200943659764193
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunLowPt_8.root",
+        "size": 10150178588,
+        "mtime_ns": 1780205609875806015
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunMediumPt_1.root",
+        "size": 10194044995,
+        "mtime_ns": 1780181554878901346
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunMediumPt_2.root",
+        "size": 10194315017,
+        "mtime_ns": 1780186266529051993
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunMediumPt_3.root",
+        "size": 10195799515,
+        "mtime_ns": 1780190954671641110
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunMediumPt_4.root",
+        "size": 10197651105,
+        "mtime_ns": 1780195694399203960
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunTeVPt_1.root",
+        "size": 10298965560,
+        "mtime_ns": 1780197526398099469
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunTeVPt_2.root",
+        "size": 10290803487,
+        "mtime_ns": 1780202241242195631
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunTeVPt_3.root",
+        "size": 10299302155,
+        "mtime_ns": 1780206968003038981
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/gunTeVPt_4.root",
+        "size": 10289298996,
+        "mtime_ns": 1780211678664228009
+      }
+    ]
+  },
+  "split": {
+    "train": {
+      "tracks": 6032798,
+      "signal": 2093903,
+      "events": 1493948
+    },
+    "val": {
+      "tracks": 968227,
+      "signal": 348109,
+      "events": 248101
+    },
+    "test": {
+      "tracks": 2811087,
+      "signal": 1044865,
+      "events": 741461
+    }
+  },
+  "device_used": "cuda",
+  "train_seconds": 493.2,
+  "verification": {
+    "compact_bin": {
+      "rows_checked": 301887,
+      "near_threshold_rows": 2115,
+      "max_abs_diff": 1.3709068298339844e-06,
+      "decision_flips": 0,
+      "seconds": 61.0
+    },
+    "onnx": {
+      "rows_checked": 100000,
+      "max_abs_diff": 9.5367431640625e-07,
+      "single_track_us": 62.9
+    }
+  },
+  "outputs": {
+    "model.json": "8d0719449fa7c65b107500bb4c93db4d",
+    "model_compact.bin": "51a79055ff06afb9ed3e26ff35ff11c8",
+    "model_xgb.onnx": "472338c70cd5ca1a6ab27173b46786da",
+    "thresholds.json": "e92b8109ab4847c561a66d5cce3c6ff3"
+  },
+  "reference": {
+    "path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/pixel_xgb_output_33f_v2/model.json",
+    "trees": 3250,
+    "roc_auc": 0.9995609954973171,
+    "pr_auc": 0.9993123034528453,
+    "perbin_wp": {
+      "precision": 0.9743225115784228,
+      "recall": 0.994749560947113,
+      "f2": 0.9905957129372762,
+      "fake_rejection": 0.9844911908016093,
+      "tp": 1039379,
+      "fp": 27392,
+      "fn": 5486,
+      "tn": 1738830
+    }
+  },
+  "total_seconds": 769.9,
+  "finished": "2026-09-23 00:48:34"
+}

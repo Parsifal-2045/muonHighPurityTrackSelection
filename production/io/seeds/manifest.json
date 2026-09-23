@@ -1,0 +1,341 @@
+{
+  "flavour": "IO seeds",
+  "started": "2026-09-23 00:35:45",
+  "host": "h100",
+  "user": "lferragi",
+  "python": "3.9.25",
+  "git_commit": "ad9361e5e2ac716f4b9889f33df6984993e92d75",
+  "git_dirty": true,
+  "packages": {
+    "xgboost": "2.1.4",
+    "numpy": "2.0.2",
+    "scikit-learn": "1.6.1",
+    "awkward": "2.8.12",
+    "uproot": "5.6.9",
+    "onnx": "1.19.1",
+    "onnxruntime": "1.19.2",
+    "onnxmltools": "1.16.0"
+  },
+  "cuda_visible_devices": "1",
+  "gpu": "NVIDIA H100 NVL",
+  "available_cpus": 94,
+  "config": {
+    "signal_boost": 5.0,
+    "kin_weight_max": 20.0,
+    "max_depth": 12,
+    "learning_rate": 0.2,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 1.0,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0,
+    "max_bin": 256,
+    "seed": 42,
+    "n_estimators": 5000,
+    "prune_tol": 0.001,
+    "prune_grid_step": 50,
+    "prune_min_trees": 100,
+    "device": "cuda",
+    "split_mode": "evt10",
+    "split_seed_offset": 0,
+    "pt_threshold_edges": [
+      0.0,
+      2.0,
+      5.0,
+      10.0,
+      50.0,
+      200.0
+    ],
+    "min_bin_signal": 100,
+    "onnx_opset": 13,
+    "compact_bin_fp16": false,
+    "permutation_importance": true,
+    "perm_repeats": 5,
+    "ref_model_path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/seeds_xgb_output_33f_v2/model.json",
+    "verbose_eval": 250,
+    "name": "IO seeds",
+    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
+    "output_dir": "/shared/training/muonHighPurityTrackSelection/production/io/seeds/",
+    "cache_tag": "io_seeds",
+    "branches": [
+      "muon_general_tracks_p",
+      "muon_general_tracks_pt",
+      "muon_general_tracks_ptErr",
+      "muon_general_tracks_eta",
+      "muon_general_tracks_etaErr",
+      "muon_general_tracks_phi",
+      "muon_general_tracks_phiErr",
+      "muon_general_tracks_chi2",
+      "muon_general_tracks_normalizedChi2",
+      "muon_general_tracks_nPixelHits",
+      "muon_general_tracks_nTrkLays",
+      "muon_general_tracks_nFoundHits",
+      "muon_general_tracks_nLostHits",
+      "muon_general_tracks_dsz",
+      "muon_general_tracks_dszErr",
+      "muon_general_tracks_dxy",
+      "muon_general_tracks_dxyErr",
+      "muon_general_tracks_dz",
+      "muon_general_tracks_dzErr",
+      "muon_general_tracks_qoverp",
+      "muon_general_tracks_qoverpErr",
+      "muon_general_tracks_lambdaErr",
+      "muon_general_tracks_matched",
+      "muon_general_tracks_duplicate",
+      "muon_general_tracks_tpPdgId",
+      "muon_general_tracks_tpPt",
+      "muon_general_tracks_tpEta",
+      "muon_general_tracks_tpPhi",
+      "L1TkMu_pt",
+      "L1TkMu_eta",
+      "L1TkMu_phi",
+      "L1TkMuStub_type",
+      "L1TkMuStub_quality",
+      "L1TkMuStub_parentL1TkMu",
+      "L1TkMuStub_etaRegion",
+      "L1TkMuStub_phiRegion",
+      "L1TkMuStub_depthRegion"
+    ],
+    "build_kwargs": {
+      "prefix": "muon_general_tracks",
+      "useL1TkMuFeatures": true,
+      "useL1TkMuStubFeatures": true
+    },
+    "pt_feature": "muon_general_tracks_pt",
+    "drop_features": [
+      "muon_general_tracks_nLostHits",
+      "muon_general_tracks_hitEfficiency",
+      "muon_general_tracks_normalizedChi2",
+      "muon_general_tracks_chi2PerHit",
+      "muon_general_tracks_chi2",
+      "muon_general_tracks_impactSignificance",
+      "muon_general_tracks_dxyErr",
+      "muon_general_tracks_dszErr",
+      "muon_general_tracks_eta",
+      "muon_general_tracks_ptErr",
+      "muon_general_tracks_relUncertaintyProduct"
+    ],
+    "production_features": [
+      "muon_general_tracks_p",
+      "muon_general_tracks_pt",
+      "muon_general_tracks_etaErr",
+      "muon_general_tracks_phiErr",
+      "muon_general_tracks_dzErr",
+      "muon_general_tracks_qoverpErr",
+      "muon_general_tracks_lambdaErr",
+      "muon_general_tracks_nPixelHits",
+      "muon_general_tracks_nTrkLays",
+      "muon_general_tracks_nFoundHits",
+      "muon_general_tracks_impact3D",
+      "muon_general_tracks_sigmaPtOverPt",
+      "muon_general_tracks_sip2D",
+      "muon_general_tracks_sipZ",
+      "muon_general_tracks_dxyOverPt",
+      "muon_general_tracks_ptErrOverP",
+      "muon_general_tracks_dzOverDxy",
+      "muon_general_tracks_absEta",
+      "L1TkMu_nStubs",
+      "L1TkMu_nStubs_Endcap",
+      "L1TkMu_nStubs_Barrel",
+      "L1TkMu_stubQual_max",
+      "L1TkMu_stubMax_etaRegion",
+      "L1TkMu_stubMax_phiRegion",
+      "L1TkMu_stubMax_depthRegion",
+      "L1TkMu_hasMatch",
+      "L1TkMu_dR2min",
+      "L1TkMu_dPtNorm",
+      "L1TkMu_chi2Pt",
+      "L1TkMu_matchingScore",
+      "L1TkMu_nCompatible",
+      "L1TkMu_secondBest_dR2",
+      "is_low_pt"
+    ],
+    "cmssw_bin": "RecoMuon/L3TrackFinder/data/IO/muonHP_IO_seedsPath_forest_v3.bin",
+    "cmssw_cfi": "HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2MuonIOTrackSelectionHighPurityForest_cfi.py"
+  },
+  "inputs": {
+    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
+    "cache_key": "b9055a945548e51e9259e6f0e5fa603ce8437b247d8f3de39bb9d6e16f87a766",
+    "cache_path": "/tmp/lferragi/muonhp_feature_cache/io_seeds_b9055a945548e51e.npz",
+    "cache_hit": true,
+    "files": [
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_1.root",
+        "size": 4380917666,
+        "mtime_ns": 1778750031403171201
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_2.root",
+        "size": 4387547325,
+        "mtime_ns": 1778750044605907962
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_3.root",
+        "size": 4372292602,
+        "mtime_ns": 1778750057874643407
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_4.root",
+        "size": 4387054887,
+        "mtime_ns": 1778750071996361847
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_1.root",
+        "size": 10261178662,
+        "mtime_ns": 1776156208823532114
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_2.root",
+        "size": 10258010290,
+        "mtime_ns": 1776160920506303746
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_3.root",
+        "size": 10258089735,
+        "mtime_ns": 1776165625626128359
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_4.root",
+        "size": 10256463719,
+        "mtime_ns": 1776170371768145813
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_1.root",
+        "size": 10206983977,
+        "mtime_ns": 1776270749073542956
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_2.root",
+        "size": 10206520542,
+        "mtime_ns": 1776275427629885831
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_3.root",
+        "size": 10208212266,
+        "mtime_ns": 1776280112988115592
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_4.root",
+        "size": 10206196443,
+        "mtime_ns": 1776284799182347969
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_5.root",
+        "size": 10208010225,
+        "mtime_ns": 1776289494617365811
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_6.root",
+        "size": 10209324140,
+        "mtime_ns": 1776294182938535395
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_7.root",
+        "size": 10207382019,
+        "mtime_ns": 1776298853383114164
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_8.root",
+        "size": 10206454704,
+        "mtime_ns": 1776303504986039714
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_1.root",
+        "size": 10246590344,
+        "mtime_ns": 1776270768102162059
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_2.root",
+        "size": 10252169735,
+        "mtime_ns": 1776275476342910703
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_3.root",
+        "size": 10251351371,
+        "mtime_ns": 1776280169494984754
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_4.root",
+        "size": 10250086831,
+        "mtime_ns": 1776284900161326368
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_1.root",
+        "size": 10348619576,
+        "mtime_ns": 1776329264257452689
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_2.root",
+        "size": 10360140347,
+        "mtime_ns": 1776334003860627530
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_3.root",
+        "size": 10349413466,
+        "mtime_ns": 1776338767003321666
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_4.root",
+        "size": 10359577387,
+        "mtime_ns": 1776343520755214526
+      }
+    ]
+  },
+  "split": {
+    "train": {
+      "tracks": 12631462,
+      "signal": 2068285,
+      "events": 1505522
+    },
+    "val": {
+      "tracks": 1986554,
+      "signal": 341572,
+      "events": 249687
+    },
+    "test": {
+      "tracks": 5735257,
+      "signal": 1020262,
+      "events": 746686
+    }
+  },
+  "device_used": "cuda",
+  "train_seconds": 519.8,
+  "verification": {
+    "compact_bin": {
+      "rows_checked": 303742,
+      "near_threshold_rows": 3939,
+      "max_abs_diff": 2.980232238769531e-07,
+      "decision_flips": 0,
+      "seconds": 94.7
+    },
+    "onnx": {
+      "rows_checked": 100000,
+      "max_abs_diff": 9.5367431640625e-07,
+      "single_track_us": 111.9
+    }
+  },
+  "outputs": {
+    "model.json": "896a36f1644f5f67f87f15486d614887",
+    "model_compact.bin": "8c936b2ef077e5501f18c6676b5c0cc1",
+    "model_xgb.onnx": "f5de07ee752b9f7deaeb37f7d8608d92",
+    "thresholds.json": "163244a9a988d12b7ded7dd3d051e204"
+  },
+  "reference": {
+    "path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/seeds_xgb_output_33f_v2/model.json",
+    "trees": 4050,
+    "roc_auc": 0.9991306037776133,
+    "pr_auc": 0.9975259587785197,
+    "perbin_wp": {
+      "precision": 0.9613389708234479,
+      "recall": 0.9887969952806349,
+      "f2": 0.9831804175798418,
+      "fake_rejection": 0.991395324915509,
+      "tp": 1008832,
+      "fp": 40571,
+      "fn": 11430,
+      "tn": 4674424
+    }
+  },
+  "total_seconds": 1133.4,
+  "finished": "2026-09-23 00:54:39"
+}
