@@ -1,14 +1,16 @@
 """
 pixel_features.py - Shared, torch-free feature extraction and evaluation
-for the high-purity muon pixel-track selector.
+for the high-purity muon inside-out (IO) track selectors.
 
-Both pixel_model.py (DNN) and pixel_xgb.py (XGBoost) import from this module
-so that the two models see byte-identical features and use the same
-evaluation suite, guaranteeing an apples-to-apples architecture comparison.
+The IO extraction is parametrised by the n-tuple branch prefix, so the
+pixel-track selector (muon_pixel_tracks_*) and the IO/seeds-track selector
+(muon_general_tracks_*) run the same code. The DNN (dnn/pixel_model.py), the
+forest pipeline (forest_pipeline.py) and the feature cross-checks all import
+from here, so every consumer sees byte-identical features.
 
 Contents:
-  - Data configuration (paths, sample weights, ONNX opset)
-  - Branch / feature-name lists
+  - Configuration (sample weights, low-pT boundary, ONNX opset)
+  - Branch / feature-name lists, production feature ABI (io_production_features())
   - build_dataset()  - awkward -> (X, y, file_labels, feature_names)
   - calculate_metrics(), evaluate_pt_bins()
   - plot_importance(), plot_roc_pr()
@@ -33,8 +35,6 @@ from sklearn.metrics import (
 # --------------------------------------------------------------------------- #
 # Configuration (shared between DNN and XGBoost)
 # --------------------------------------------------------------------------- #
-DATA_DIR = "/cms-hlt-nfs/user/lferragi/tunedPixelSelector/"
-
 # Sample-weighting (used identically by both models)
 SIGNAL_BOOST = 5.0
 KIN_WEIGHT_MAX = 20.0
@@ -46,38 +46,49 @@ LOW_PT_CUT = 5.0
 ONNX_OPSET = 13
 
 
-def get_files(data_dir=DATA_DIR):
-    """Return sorted list of input ROOT files."""
-    return sorted(
+def get_files(data_dir):
+    """Return sorted list of input ROOT files (every *.root file in data_dir)."""
+    files = sorted(
         os.path.join(data_dir, f)
         for f in os.listdir(data_dir)
-        if os.path.isfile(os.path.join(data_dir, f))
+        if f.endswith(".root") and os.path.isfile(os.path.join(data_dir, f))
     )
+    if not files:
+        raise SystemExit(f"no .root files in {data_dir}")
+    return files
 
 
-def tee_log(output_dir, filename="train.log"):
+class TeeStream:
+    """Write-through to a terminal stream and a log file."""
+
+    def __init__(self, stream, fh):
+        self.stream, self.fh = stream, fh
+
+    def write(self, s):
+        self.stream.write(s)
+        self.fh.write(s)
+        return len(s)
+
+    def flush(self):
+        self.stream.flush()
+        self.fh.flush()
+
+    def close_log(self):
+        """Restore sys.stdout/sys.stderr and close the log file."""
+        self.flush()
+        sys.stdout, sys.stderr = sys.__stdout__, sys.__stderr__
+        self.fh.close()
+
+
+def tee_log(output_dir, filename="train.log", display=None):
     """Tee stdout/stderr into <output_dir>/<filename> so the full training
     log is stored inside the model's output directory. Returns the log file
-    handle (keep it referenced)."""
+    handle; sys.stdout.close_log() restores the streams and closes it."""
     os.makedirs(output_dir, exist_ok=True)
     fh = open(os.path.join(output_dir, filename), "w")
-
-    class _Tee:
-        def __init__(self, *streams):
-            self.streams = streams
-
-        def write(self, s):
-            for st in self.streams:
-                st.write(s)
-            return len(s)
-
-        def flush(self):
-            for st in self.streams:
-                st.flush()
-
-    sys.stdout = _Tee(sys.__stdout__, fh)
-    sys.stderr = _Tee(sys.__stderr__, fh)
-    print(f"Logging to {output_dir}{filename}")
+    sys.stdout = TeeStream(sys.__stdout__, fh)
+    sys.stderr = TeeStream(sys.__stderr__, fh)
+    print(f"Logging to {display or os.path.join(output_dir, filename)}")
     return fh
 
 
@@ -86,36 +97,40 @@ def tee_log(output_dir, filename="train.log"):
 # --------------------------------------------------------------------------- #
 MAIN_BRANCH = "Events"
 
-TK_BRANCHES = [
-    "muon_pixel_tracks_p",
-    "muon_pixel_tracks_pt",
-    "muon_pixel_tracks_ptErr",
-    "muon_pixel_tracks_eta",
-    "muon_pixel_tracks_etaErr",
-    "muon_pixel_tracks_phi",
-    "muon_pixel_tracks_phiErr",
-    "muon_pixel_tracks_chi2",
-    "muon_pixel_tracks_normalizedChi2",
-    "muon_pixel_tracks_nPixelHits",
-    "muon_pixel_tracks_nTrkLays",
-    "muon_pixel_tracks_nFoundHits",
-    "muon_pixel_tracks_nLostHits",
-    "muon_pixel_tracks_dsz",
-    "muon_pixel_tracks_dszErr",
-    "muon_pixel_tracks_dxy",
-    "muon_pixel_tracks_dxyErr",
-    "muon_pixel_tracks_dz",
-    "muon_pixel_tracks_dzErr",
-    "muon_pixel_tracks_qoverp",
-    "muon_pixel_tracks_qoverpErr",
-    "muon_pixel_tracks_lambdaErr",
-    "muon_pixel_tracks_matched",
-    "muon_pixel_tracks_duplicate",
-    "muon_pixel_tracks_tpPdgId",
-    "muon_pixel_tracks_tpPt",
-    "muon_pixel_tracks_tpEta",
-    "muon_pixel_tracks_tpPhi",
+# n-tuple branch prefixes of the two IO selectors
+PIXEL_PREFIX = "muon_pixel_tracks"    # hltPhase2MuonPixelTracks
+SEEDS_PREFIX = "muon_general_tracks"  # hltPhase2MuonIOTracks
+
+_TK_VARS = [
+    "p", "pt", "ptErr", "eta", "etaErr", "phi", "phiErr", "chi2", "normalizedChi2",
+    "nPixelHits", "nTrkLays", "nFoundHits", "nLostHits", "dsz", "dszErr", "dxy",
+    "dxyErr", "dz", "dzErr", "qoverp", "qoverpErr", "lambdaErr", "matched",
+    "duplicate", "tpPdgId", "tpPt", "tpEta", "tpPhi",
 ]
+# Features stored as log10(|x| + eps)
+_LOG_VARS = [
+    "p", "pt", "ptErr", "chi2", "normalizedChi2", "etaErr", "phiErr", "dszErr",
+    "dxyErr", "dzErr", "qoverpErr", "lambdaErr",
+]
+# Features stored as-is (plain)
+_PLAIN_VARS = ["eta", "nPixelHits", "nTrkLays", "nFoundHits", "nLostHits"]
+
+
+def tk_branches(prefix):
+    return [f"{prefix}_{v}" for v in _TK_VARS]
+
+
+def log_features(prefix):
+    return [f"{prefix}_{v}" for v in _LOG_VARS]
+
+
+def plain_features(prefix):
+    return [f"{prefix}_{v}" for v in _PLAIN_VARS]
+
+
+def label_field(prefix):
+    return f"{prefix}_matched"
+
 
 L1TKMUON_BRANCHES = ["L1TkMu_pt", "L1TkMu_eta", "L1TkMu_phi"]
 
@@ -128,39 +143,65 @@ STUB_BRANCHES = [
     "L1TkMuStub_depthRegion",
 ]
 
-# Features stored as log10(|x| + eps)
-LOG_FEATURES = [
-    "muon_pixel_tracks_p",
-    "muon_pixel_tracks_pt",
-    "muon_pixel_tracks_ptErr",
-    "muon_pixel_tracks_chi2",
-    "muon_pixel_tracks_normalizedChi2",
-    "muon_pixel_tracks_etaErr",
-    "muon_pixel_tracks_phiErr",
-    "muon_pixel_tracks_dszErr",
-    "muon_pixel_tracks_dxyErr",
-    "muon_pixel_tracks_dzErr",
-    "muon_pixel_tracks_qoverpErr",
-    "muon_pixel_tracks_lambdaErr",
+# Pixel-flavour names (kept for the DNN trainer and older tools)
+TK_BRANCHES = tk_branches(PIXEL_PREFIX)
+LOG_FEATURES = log_features(PIXEL_PREFIX)
+PLAIN_FEATURES = plain_features(PIXEL_PREFIX)
+LABEL_FIELD = label_field(PIXEL_PREFIX)
+
+
+# --------------------------------------------------------------------------- #
+# Production feature ABI (IO selectors)
+# --------------------------------------------------------------------------- #
+# build_dataset() emits 44 features; the deployed forests use 33 of them.
+# The 11 dropped ones (44 -> 33 pruning, see pixel_xgb.py):
+_IO_DROPPED_VARS = [
+    "nLostHits", "hitEfficiency", "normalizedChi2", "chi2PerHit", "chi2",
+    "impactSignificance", "dxyErr", "dszErr", "eta", "ptErr", "relUncertaintyProduct",
+]
+# The 33 kept features in training order. This order is the ABI of the CMSSW
+# extractor (RecoMuon/L3TrackFinder/interface/IOTrackSelectorFeatures.h,
+# muonhp::IOTrackFeatures::toArray()); the forest pipeline asserts it.
+_IO_KEPT_TRACK_VARS = [
+    "p", "pt", "etaErr", "phiErr", "dzErr", "qoverpErr", "lambdaErr",
+    "nPixelHits", "nTrkLays", "nFoundHits",
+    "impact3D", "sigmaPtOverPt", "sip2D", "sipZ", "dxyOverPt", "ptErrOverP", "dzOverDxy", "absEta",
+]
+_IO_L1_FEATURES = [
+    "L1TkMu_nStubs", "L1TkMu_nStubs_Endcap", "L1TkMu_nStubs_Barrel", "L1TkMu_stubQual_max",
+    "L1TkMu_stubMax_etaRegion", "L1TkMu_stubMax_phiRegion", "L1TkMu_stubMax_depthRegion",
+    "L1TkMu_hasMatch", "L1TkMu_dR2min", "L1TkMu_dPtNorm", "L1TkMu_chi2Pt",
+    "L1TkMu_matchingScore", "L1TkMu_nCompatible", "L1TkMu_secondBest_dR2",
 ]
 
-# Features stored as-is (plain)
-PLAIN_FEATURES = [
-    "muon_pixel_tracks_eta",
-    "muon_pixel_tracks_nPixelHits",
-    "muon_pixel_tracks_nTrkLays",
-    "muon_pixel_tracks_nFoundHits",
-    "muon_pixel_tracks_nLostHits",
-]
 
-LABEL_FIELD = "muon_pixel_tracks_matched"
+def io_drop_features(prefix):
+    return [f"{prefix}_{v}" for v in _IO_DROPPED_VARS]
+
+
+def io_production_features(prefix):
+    return [f"{prefix}_{v}" for v in _IO_KEPT_TRACK_VARS] + _IO_L1_FEATURES + ["is_low_pt"]
 
 
 # --------------------------------------------------------------------------- #
 # Helpers
 # --------------------------------------------------------------------------- #
+# Numeric convention shared with the CMSSW extractors (IOTrackSelectorFeatures.h,
+# OITrackSelectorFeatures.h): raw inputs as stored in the n-tuple (float32),
+# every operation in float64, each feature rounded to float32 once. Mixing
+# float32 and float64 arithmetic between training and inference moves
+# constant-valued (imputed) features across forest split points: in the v2
+# models log10(1 + 1e-6) evaluated in float vs double flipped 177 nodes.
+def as_float64(arr):
+    """All fields of an event record array as float64."""
+    return ak.zip({f: ak.values_astype(arr[f], np.float64) for f in arr.fields}, depth_limit=1)
+
+
 def delta_phi(phi1, phi2):
-    return (phi1 - phi2 + np.pi) % (2 * np.pi) - np.pi
+    """reco::deltaPhi: phi1 - phi2 reduced to [-pi, pi] (exact when no
+    reduction is needed, as reco::reduceRange)."""
+    d = phi1 - phi2
+    return ak.where(np.abs(d) <= np.pi, d, d - np.rint(d * (1.0 / (2.0 * np.pi))) * (2.0 * np.pi))
 
 
 def impute_and_log(vals, mask, fill=-1.0):
@@ -194,9 +235,10 @@ def calculate_metrics(c):
 # Dataset construction
 # --------------------------------------------------------------------------- #
 def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeatures=True,
-                  verbose=False, event_ids=None):
+                  verbose=False, event_ids=None, prefix=PIXEL_PREFIX):
     """
-    Builds the feature matrix from an awkward array of events.
+    Builds the 44-feature IO matrix from an awkward array of events;
+    `prefix` selects the track collection (PIXEL_PREFIX or SEEDS_PREFIX).
 
     Returns (X, y, file_labels_masked, final_feature_names).
     If event_ids (one id per event) is given, the per-track event ids survive
@@ -206,10 +248,11 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
     if verbose:
         print("Building dataset...")
 
-    mask = arr["muon_pixel_tracks_pt"] > 0
+    arr = as_float64(arr)  # numeric convention: see as_float64()
+    mask = arr[f"{prefix}_pt"] > 0
 
     # Expand file labels (and, optionally, event ids) to per-track arrays
-    n_tracks_per_event = ak.num(arr["muon_pixel_tracks_pt"])
+    n_tracks_per_event = ak.num(arr[f"{prefix}_pt"])
     file_labels_jagged = ak.unflatten(
         np.repeat(file_labels_in, n_tracks_per_event), n_tracks_per_event
     )
@@ -224,35 +267,34 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
     cols = []
     final_feature_names = []
 
-    trk_pt = arr["muon_pixel_tracks_pt"]
+    trk_pt = arr[f"{prefix}_pt"]
     available_keys = arr.fields
 
     # Standard features (log and linear)
-    for f in LOG_FEATURES:
+    for f in log_features(prefix):
         if f in available_keys:
-            flat = ak.to_numpy(ak.flatten(arr[f][mask])).astype(np.float32)
+            flat = ak.to_numpy(ak.flatten(arr[f][mask]))
             cols.append(np.log10(np.abs(flat) + 1e-6))
             final_feature_names.append(f)
 
-    for f in PLAIN_FEATURES:
+    for f in plain_features(prefix):
         if f in available_keys:
-            flat = ak.to_numpy(ak.flatten(arr[f][mask])).astype(np.float32)
-            cols.append(flat)
+            cols.append(ak.to_numpy(ak.flatten(arr[f][mask])))
             final_feature_names.append(f)
 
     # Derived features
     if verbose:
         print("Adding derived features...")
 
-    trk_dxy = arr["muon_pixel_tracks_dxy"]
-    trk_dz = arr["muon_pixel_tracks_dz"]
-    trk_dxyErr = arr["muon_pixel_tracks_dxyErr"]
-    trk_dzErr = arr["muon_pixel_tracks_dzErr"]
+    trk_dxy = arr[f"{prefix}_dxy"]
+    trk_dz = arr[f"{prefix}_dz"]
+    trk_dxyErr = arr[f"{prefix}_dxyErr"]
+    trk_dzErr = arr[f"{prefix}_dzErr"]
 
     # Impact Parameter 3D (log)
     ip3d = trk_dxy**2 + trk_dz**2
     cols.append(ak.to_numpy(ak.flatten(np.log10(ip3d + 1e-6)[mask])).astype(np.float32))
-    final_feature_names.append("muon_pixel_tracks_impact3D")
+    final_feature_names.append(f"{prefix}_impact3D")
 
     # Combined Impact Significance (log)
     sip_combined = np.sqrt(
@@ -262,37 +304,37 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(sip_combined + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_impactSignificance")
+    final_feature_names.append(f"{prefix}_impactSignificance")
 
     # Track Quality
-    trk_chi2 = arr["muon_pixel_tracks_chi2"]
-    trk_nFound = arr["muon_pixel_tracks_nFoundHits"]
-    trk_nLost = arr["muon_pixel_tracks_nLostHits"]
+    trk_chi2 = arr[f"{prefix}_chi2"]
+    trk_nFound = arr[f"{prefix}_nFoundHits"]
+    trk_nLost = arr[f"{prefix}_nLostHits"]
 
     # Chi2 per hit (log)
     chi2_hit = trk_chi2 / np.maximum(trk_nFound, 1)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(chi2_hit + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_chi2PerHit")
+    final_feature_names.append(f"{prefix}_chi2PerHit")
 
     # Hit Efficiency
     hit_eff = trk_nFound / np.maximum(trk_nFound + trk_nLost, 1)
     cols.append(ak.to_numpy(ak.flatten(hit_eff[mask])).astype(np.float32))
-    final_feature_names.append("muon_pixel_tracks_hitEfficiency")
+    final_feature_names.append(f"{prefix}_hitEfficiency")
 
     # Relative Uncertainties
-    trk_ptErr = arr["muon_pixel_tracks_ptErr"]
-    trk_p = arr["muon_pixel_tracks_p"]
-    trk_qoverp = arr["muon_pixel_tracks_qoverp"]
-    trk_qoverpErr = arr["muon_pixel_tracks_qoverpErr"]
+    trk_ptErr = arr[f"{prefix}_ptErr"]
+    trk_p = arr[f"{prefix}_p"]
+    trk_qoverp = arr[f"{prefix}_qoverp"]
+    trk_qoverpErr = arr[f"{prefix}_qoverpErr"]
 
     # SigmaPt / Pt (log)
     sigmaPtOverPt = trk_ptErr / np.maximum(trk_pt, 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(sigmaPtOverPt + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_sigmaPtOverPt")
+    final_feature_names.append(f"{prefix}_sigmaPtOverPt")
 
     # Relative Uncertainty Product (log)
     relUncertProd = sigmaPtOverPt * (
@@ -301,57 +343,57 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(relUncertProd + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_relUncertaintyProduct")
+    final_feature_names.append(f"{prefix}_relUncertaintyProduct")
 
     # Separated 2D impact parameter significance (log)
     sip_2d = np.abs(trk_dxy) / np.maximum(trk_dxyErr, 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(sip_2d + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_sip2D")
+    final_feature_names.append(f"{prefix}_sip2D")
 
     # Longitudinal impact parameter significance (log)
     sip_z = np.abs(trk_dz) / np.maximum(trk_dzErr, 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(sip_z + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_sipZ")
+    final_feature_names.append(f"{prefix}_sipZ")
 
     # |dxy| / pT
     dxy_over_pt = np.abs(trk_dxy) / np.maximum(trk_pt, 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(dxy_over_pt + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_dxyOverPt")
+    final_feature_names.append(f"{prefix}_dxyOverPt")
 
     # ptErr / p
     ptErr_over_p = trk_ptErr / np.maximum(trk_p, 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(ptErr_over_p + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_ptErrOverP")
+    final_feature_names.append(f"{prefix}_ptErrOverP")
 
     # |dz| / |dxy| ratio
     dz_over_dxy = np.abs(trk_dz) / (np.abs(trk_dxy) + 1e-6)
     cols.append(
         ak.to_numpy(ak.flatten(np.log10(dz_over_dxy + 1e-6)[mask])).astype(np.float32)
     )
-    final_feature_names.append("muon_pixel_tracks_dzOverDxy")
+    final_feature_names.append(f"{prefix}_dzOverDxy")
 
     # |eta|
-    trk_eta = arr["muon_pixel_tracks_eta"]
+    trk_eta = arr[f"{prefix}_eta"]
     cols.append(ak.to_numpy(ak.flatten(np.abs(trk_eta)[mask])).astype(np.float32))
-    final_feature_names.append("muon_pixel_tracks_absEta")
+    final_feature_names.append(f"{prefix}_absEta")
 
     # L1 Matching
     if useL1TkMuFeatures:
         if verbose:
             print("Computing L1 matching...")
 
-        t_eta = arr["muon_pixel_tracks_eta"][:, :, np.newaxis]
-        t_phi = arr["muon_pixel_tracks_phi"][:, :, np.newaxis]
-        t_pt = arr["muon_pixel_tracks_pt"][:, :, np.newaxis]
-        t_ptErr = arr["muon_pixel_tracks_ptErr"][:, :, np.newaxis]
+        t_eta = arr[f"{prefix}_eta"][:, :, np.newaxis]
+        t_phi = arr[f"{prefix}_phi"][:, :, np.newaxis]
+        t_pt = arr[f"{prefix}_pt"][:, :, np.newaxis]
+        t_ptErr = arr[f"{prefix}_ptErr"][:, :, np.newaxis]
 
         l1_eta = arr["L1TkMu_eta"][:, np.newaxis, :]
         l1_phi = arr["L1TkMu_phi"][:, np.newaxis, :]
@@ -522,17 +564,17 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
         final_feature_names.append("L1TkMu_secondBest_dR2")
 
     # Low pT indicator
-    flat_pt = ak.to_numpy(ak.flatten(trk_pt[mask])).astype(np.float32)
+    flat_pt = ak.to_numpy(ak.flatten(trk_pt[mask]))
 
     exponent = (flat_pt - LOW_PT_CUT) * 2.0
     exponent = np.clip(exponent, -20.0, 20.0)
     low_pt_indicator = 1.0 / (1.0 + np.exp(exponent))
-    cols.append(low_pt_indicator.astype(np.float32))
+    cols.append(low_pt_indicator)
     final_feature_names.append("is_low_pt")
 
-    # Assemble
+    # Assemble (the single float64 -> float32 rounding of every feature)
     X = np.column_stack(cols).astype(np.float32)
-    y = ak.to_numpy(ak.flatten(arr[LABEL_FIELD][mask])).astype(np.int8)
+    y = ak.to_numpy(ak.flatten(arr[label_field(prefix)][mask])).astype(np.int8)
 
     finite_mask = np.isfinite(X).all(axis=1)
     if not finite_mask.all():
@@ -575,14 +617,17 @@ def compute_sample_weights(y, pt_vals, signal_boost=SIGNAL_BOOST,
 # --------------------------------------------------------------------------- #
 # Per-pT-bin evaluation
 # --------------------------------------------------------------------------- #
-def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir, decisions=None):
+def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir, decisions=None,
+                     edges=None, filename="pt_bin_performance.png"):
     """Evaluate precision/recall/F2 in pT bins and produce a summary plot.
 
     `threshold` is the scalar (global) threshold for reference decisions.
     `decisions`, if given, is the per-track accept mask actually reported and
-    plotted (e.g. from pT-binned thresholds)."""
-    bins = [(0.0, 5.0), (5.0, 10.0), (10.0, 50.0), (50.0, 200.0), (200.0, 1e6)]
-    labels = ["0-5", "5-10", "10-50", "50-200", ">200"]
+    plotted (e.g. from pT-binned thresholds). `edges` (lower bin edges, last
+    bin open-ended) defaults to [0, 5, 10, 50, 200]."""
+    edges = list(edges) if edges is not None else [0.0, 5.0, 10.0, 50.0, 200.0]
+    bins = pt_bins_from_edges(edges)
+    labels = [f"{lo:g}-{hi:g}" if np.isfinite(hi) else f">{lo:g}" for lo, hi in bins]
 
     results = []
     print(
@@ -643,9 +688,9 @@ def evaluate_pt_bins(y_true, y_pred, pt_values, threshold, output_dir, decisions
         ax2.grid(axis="y", alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig(output_dir + "pt_bin_performance.png", dpi=200, bbox_inches="tight")
+        plt.savefig(output_dir + filename, dpi=200, bbox_inches="tight")
         plt.close()
-        print(f"  Saved: {output_dir}pt_bin_performance.png")
+        print(f"  Saved: {output_dir}{filename}")
 
     return results
 

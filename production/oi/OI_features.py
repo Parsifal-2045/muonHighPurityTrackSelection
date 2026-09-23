@@ -3,26 +3,28 @@ OI_features.py - Feature extraction for the OI (outside-in) muon track
 high-purity selectors (l3_tk_OI_* track collection, L2 standalone-muon
 matching), used by OI_pixel_xgb.py and OI_general_xgb.py.
 
-IMPORTANT: the extraction mirrors the CMSSW module MuonOITracksDNNSelector.cc
-EXACTLY (26 features, same order, same epsilons/imputation), including two
-details where the legacy OI DNN training scripts (tests/OI_*_model.py)
-differed from the deployed C++:
+IMPORTANT: the extraction mirrors the CMSSW extractor
+(RecoMuon/L3TrackFinder/interface/OITrackSelectorFeatures.h,
+muonhp::extractOITrackFeatures) EXACTLY (same epsilons/imputation; the C++
+emits the 22-feature production subset OI_PRODUCTION_FEATURES of the 26
+built here, in that order), including the details where the legacy OI DNN
+training scripts (tests/OI_*_model.py) differed from the deployed C++:
 
   * delta phi between the track and a standalone muon is WRAPPED
     (reco::deltaPhi equivalent), while the legacy python used the raw
     difference;
   * the matching score is (chi2Eta + chi2Phi + chi2Pt + chi2Dz) / 9 (each
-    component divided by kMatchChi2=9), while the legacy python used the
+    component divided by kOIMatchChi2=9), while the legacy python used the
     unnormalised sum;
   * the no-match imputation for l2_mu_vtx_matchingScore is 10.0 in raw space
-    (kImputeMatchScore), while the legacy python imputed log10(10) ~ 1.0.
+    (kOIImputeMatchScore), while the legacy python imputed log10(10) ~ 1.0.
 
 Scoring semantics: bestScore is the minimum score over standalone muons
 (initial 25 i.e. 5 sigma^2 in the /9 units); hasMatch = bestScore < 25,
 matchingScore = log10(bestScore + 1e-6) when matched else 10.0.
 
-Exports build_dataset() plus the OI branch lists; evaluation helpers come
-from pixel_features (shared with the IO models).
+Exports build_dataset(), the OI branch lists and the production feature ABI;
+evaluation helpers come from pixel_features (shared with the IO models).
 """
 import os
 import sys
@@ -109,10 +111,33 @@ PLAIN_FEATURES = [
 
 LABEL_FIELD = "l3_tk_OI_matched"
 
-# Matching constants (must equal MuonOITracksDNNSelector.cc)
+# Production feature ABI: build_dataset() emits 26 features, the deployed
+# forests use 22. Round-2 pruning (26 -> 22) dropped these four (duplicates of
+# qoverpErr's pT-uncertainty information and of normalizedChi2/chi2PerHit):
+OI_DROP_FEATURES = [
+    "l3_tk_OI_chi2",
+    "l3_tk_OI_ptErr",
+    "l3_tk_OI_sigmaPtOverPt",
+    "l3_tk_OI_relUncertaintyProduct",
+]
+# The 22 kept features in training order = muonhp::OITrackFeatures::toArray()
+# (asserted by the forest pipeline).
+OI_PRODUCTION_FEATURES = [
+    "l3_tk_OI_p", "l3_tk_OI_pt", "l3_tk_OI_normalizedChi2", "l3_tk_OI_etaErr",
+    "l3_tk_OI_phiErr", "l3_tk_OI_dszErr", "l3_tk_OI_dxyErr", "l3_tk_OI_dzErr",
+    "l3_tk_OI_qoverpErr", "l3_tk_OI_lambdaErr",
+    "l3_tk_OI_eta", "l3_tk_OI_nPixelHits", "l3_tk_OI_nTrkLays", "l3_tk_OI_nFoundHits",
+    "l3_tk_OI_nLostHits",
+    "l3_tk_OI_impact3D", "l3_tk_OI_impactSignificance", "l3_tk_OI_chi2PerHit",
+    "l3_tk_OI_hitEfficiency",
+    "l2_mu_vtx_hasMatch", "l2_mu_vtx_matchingScore",
+    "is_low_pt",
+]
+
+# Matching constants (must equal OITrackSelectorFeatures.h)
 MATCH_CHI2 = 9.0
 NO_MATCH_BEST_SCORE = 25.0
-IMPUTE_MATCH_SCORE = 10.0  # raw space (C++ kImputeMatchScore)
+IMPUTE_MATCH_SCORE = 10.0  # raw space (C++ kOIImputeMatchScore)
 
 
 # --------------------------------------------------------------------------- #
@@ -122,7 +147,7 @@ def build_dataset(arr, file_labels_in, useStandaloneFeatures=True,
                   verbose=False, event_ids=None):
     """
     Builds the 26-feature OI matrix from an awkward array of events, matching
-    MuonOITracksDNNSelector.cc feature-for-feature.
+    the C++ extractor feature-for-feature.
 
     Returns (X, y, file_labels_masked, final_feature_names); if event_ids is
     given, the per-track event ids survive the same masks as a 5th element.
@@ -130,6 +155,7 @@ def build_dataset(arr, file_labels_in, useStandaloneFeatures=True,
     if verbose:
         print("Building dataset...")
 
+    arr = pf.as_float64(arr)  # numeric convention shared with the C++: see pf.as_float64()
     mask = arr["l3_tk_OI_pt"] > 0
 
     n_tracks_per_event = ak.num(arr["l3_tk_OI_pt"])
@@ -153,15 +179,14 @@ def build_dataset(arr, file_labels_in, useStandaloneFeatures=True,
     # 0-11: log features
     for f in LOG_FEATURES:
         if f in available_keys:
-            flat = ak.to_numpy(ak.flatten(arr[f][mask])).astype(np.float32)
+            flat = ak.to_numpy(ak.flatten(arr[f][mask]))
             cols.append(np.log10(np.abs(flat) + 1e-6))
             final_feature_names.append(f)
 
     # 12-16: plain features (raw eta, hit counts)
     for f in PLAIN_FEATURES:
         if f in available_keys:
-            flat = ak.to_numpy(ak.flatten(arr[f][mask])).astype(np.float32)
-            cols.append(flat)
+            cols.append(ak.to_numpy(ak.flatten(arr[f][mask])))
             final_feature_names.append(f)
 
     # 17-22: derived features
@@ -247,8 +272,8 @@ def build_dataset(arr, file_labels_in, useStandaloneFeatures=True,
         s_dz = arr["l2_mu_vtx_dz"][:, np.newaxis, :]
         s_dzErr = arr["l2_mu_vtx_dzErr"][:, np.newaxis, :]
 
-        # Wrapped delta phi (reco::deltaPhi equivalent)
-        d_phi = (t_phi - s_phi + np.pi) % (2 * np.pi) - np.pi
+        # Wrapped delta phi (reco::deltaPhi)
+        d_phi = pf.delta_phi(t_phi, s_phi)
 
         chi2_eta = (t_eta - s_eta) ** 2 / (t_etaErr**2 + s_etaErr**2 + 1e-12)
         chi2_phi = d_phi**2 / (t_phiErr**2 + s_phiErr**2 + 1e-12)
@@ -269,14 +294,14 @@ def build_dataset(arr, file_labels_in, useStandaloneFeatures=True,
         final_feature_names.append("l2_mu_vtx_matchingScore")
 
     # 25: soft low-pT indicator (sigmoid around 5 GeV)
-    flat_pt = ak.to_numpy(ak.flatten(trk_pt[mask])).astype(np.float32)
+    flat_pt = ak.to_numpy(ak.flatten(trk_pt[mask]))
     exponent = (flat_pt - pf.LOW_PT_CUT) * 2.0
     exponent = np.clip(exponent, -20.0, 20.0)
     low_pt_indicator = 1.0 / (1.0 + np.exp(exponent))
-    cols.append(low_pt_indicator.astype(np.float32))
+    cols.append(low_pt_indicator)
     final_feature_names.append("is_low_pt")
 
-    X = np.column_stack(cols).astype(np.float32)
+    X = np.column_stack(cols).astype(np.float32)  # single float64 -> float32 rounding
     y = ak.to_numpy(ak.flatten(arr[LABEL_FIELD][mask])).astype(np.int8)
 
     finite_mask = np.isfinite(X).all(axis=1)
