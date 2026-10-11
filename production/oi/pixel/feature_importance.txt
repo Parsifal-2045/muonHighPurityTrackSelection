@@ -1,51 +1,51 @@
-Test PR-AUC: 0.997217
-Test ROC-AUC: 0.999714
+Test PR-AUC: 0.869293
+Test ROC-AUC: 0.991511
 
 Rank  Feature                                              Gain       Cover
 ---------------------------------------------------------------------------
-1     l3_tk_OI_nTrkLays                                 1657.60      2687.9
-2     l3_tk_OI_hitEfficiency                             621.71      2528.2
-3     l3_tk_OI_impact3D                                  600.16      2338.5
-4     l3_tk_OI_nPixelHits                                478.89      2879.3
-5     l3_tk_OI_nLostHits                                 190.04       900.5
-6     is_low_pt                                          130.89       726.3
-7     l3_tk_OI_normalizedChi2                            126.00       775.8
-8     l3_tk_OI_nFoundHits                                 91.59      1026.2
-9     l2_mu_vtx_matchingScore                             83.71      1155.8
-10    l3_tk_OI_etaErr                                     83.06      1113.2
-11    l3_tk_OI_pt                                         79.87       835.0
-12    l3_tk_OI_dzErr                                      64.45       612.2
-13    l3_tk_OI_qoverpErr                                  63.66       564.7
-14    l3_tk_OI_dszErr                                     50.44       526.3
-15    l3_tk_OI_chi2PerHit                                 47.83       436.4
-16    l3_tk_OI_dxyErr                                     45.91       464.8
-17    l3_tk_OI_impactSignificance                         43.81      1105.0
-18    l3_tk_OI_p                                          34.42       486.8
-19    l3_tk_OI_eta                                        34.26       647.6
-20    l3_tk_OI_phiErr                                     32.86      1061.0
-21    l3_tk_OI_lambdaErr                                  26.83       350.7
-22    l2_mu_vtx_hasMatch                                  14.57      1228.6
+1     l3_tk_OI_nTrkLays                                12468.20     23852.4
+2     l3_tk_OI_nPixelHits                               4522.15     19724.7
+3     l3_tk_OI_nFoundHits                               1945.84     16070.1
+4     l3_tk_OI_impact3D                                 1931.59     26746.6
+5     is_low_pt                                         1426.97      9229.6
+6     l3_tk_OI_etaErr                                   1263.42     19064.9
+7     l3_tk_OI_hitEfficiency                            1231.36     19038.7
+8     l3_tk_OI_normalizedChi2                           1154.06     13175.8
+9     l3_tk_OI_nLostHits                                1132.39     11454.8
+10    l3_tk_OI_phiErr                                    921.67     18675.7
+11    l3_tk_OI_pt                                        557.32     15866.4
+12    l3_tk_OI_chi2PerHit                                388.90     10456.9
+13    l3_tk_OI_dzErr                                     343.72      9188.5
+14    l3_tk_OI_qoverpErr                                 329.71      9846.9
+15    l2_mu_vtx_matchingScore                            209.92     17498.0
+16    l3_tk_OI_impactSignificance                        141.40      9440.9
+17    l3_tk_OI_p                                         123.65     14743.1
+18    l2_mu_vtx_hasMatch                                 121.59      2434.3
+19    l3_tk_OI_lambdaErr                                  99.54      5460.8
+20    l3_tk_OI_eta                                        83.25      5549.4
+21    l3_tk_OI_dszErr                                     65.05      6223.5
+22    l3_tk_OI_dxyErr                                     51.80      4563.1
 
 Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
-  l3_tk_OI_impact3D                            +0.16021 +/- 0.00073
-  l3_tk_OI_impactSignificance                  +0.05542 +/- 0.00021
-  l2_mu_vtx_matchingScore                      +0.04382 +/- 0.00060
-  l3_tk_OI_normalizedChi2                      +0.01214 +/- 0.00021
-  l3_tk_OI_nTrkLays                            +0.00766 +/- 0.00008
-  l3_tk_OI_eta                                 +0.00737 +/- 0.00013
-  l3_tk_OI_dzErr                               +0.00622 +/- 0.00011
-  l3_tk_OI_nPixelHits                          +0.00566 +/- 0.00015
-  l3_tk_OI_hitEfficiency                       +0.00392 +/- 0.00009
-  l3_tk_OI_etaErr                              +0.00338 +/- 0.00015
-  l3_tk_OI_pt                                  +0.00317 +/- 0.00006
-  l3_tk_OI_p                                   +0.00284 +/- 0.00005
-  is_low_pt                                    +0.00244 +/- 0.00018
-  l3_tk_OI_qoverpErr                           +0.00173 +/- 0.00008
-  l3_tk_OI_dszErr                              +0.00145 +/- 0.00004
-  l3_tk_OI_lambdaErr                           +0.00132 +/- 0.00004
-  l3_tk_OI_dxyErr                              +0.00128 +/- 0.00006
-  l3_tk_OI_chi2PerHit                          +0.00105 +/- 0.00004
-  l3_tk_OI_phiErr                              +0.00087 +/- 0.00005
-  l3_tk_OI_nFoundHits                          +0.00026 +/- 0.00001
-  l3_tk_OI_nLostHits                           +0.00018 +/- 0.00001
-  l2_mu_vtx_hasMatch                           +0.00000 +/- 0.00000
+  l3_tk_OI_nTrkLays                            +0.17299 +/- 0.00296
+  l3_tk_OI_impact3D                            +0.14877 +/- 0.00147
+  l3_tk_OI_nPixelHits                          +0.10678 +/- 0.00140
+  l3_tk_OI_hitEfficiency                       +0.08838 +/- 0.00198
+  l3_tk_OI_normalizedChi2                      +0.04166 +/- 0.00239
+  l2_mu_vtx_matchingScore                      +0.03333 +/- 0.00115
+  l3_tk_OI_etaErr                              +0.02669 +/- 0.00099
+  l3_tk_OI_dzErr                               +0.01940 +/- 0.00111
+  l3_tk_OI_nFoundHits                          +0.01808 +/- 0.00092
+  l3_tk_OI_phiErr                              +0.01684 +/- 0.00095
+  l3_tk_OI_chi2PerHit                          +0.01380 +/- 0.00065
+  l3_tk_OI_p                                   +0.01364 +/- 0.00038
+  l3_tk_OI_impactSignificance                  +0.00782 +/- 0.00076
+  l3_tk_OI_qoverpErr                           +0.00666 +/- 0.00041
+  is_low_pt                                    +0.00616 +/- 0.00031
+  l3_tk_OI_nLostHits                           +0.00603 +/- 0.00017
+  l3_tk_OI_pt                                  +0.00488 +/- 0.00048
+  l3_tk_OI_dszErr                              +0.00354 +/- 0.00014
+  l3_tk_OI_lambdaErr                           +0.00323 +/- 0.00017
+  l3_tk_OI_dxyErr                              +0.00165 +/- 0.00005
+  l2_mu_vtx_hasMatch                           +0.00090 +/- 0.00015
+  l3_tk_OI_eta                                 -0.00160 +/- 0.00056

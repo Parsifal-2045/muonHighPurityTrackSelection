@@ -1,20 +1,27 @@
 Flavour: IO seeds
-Model: XGBoost (1250 trees, 33 features)
-F1_Threshold: 0.6565025448799133
-F2_Threshold: 0.17353090643882751
-Test_ROC_AUC: 0.999524368621082
-Test_PR_AUC: 0.9988005617105382
-Test_F2_global_WP: 0.9904428302343138
-Test_F2_perbin_WP: 0.9904623024838308
-Test_perbin_WP: precision=0.9803116007506707 recall=0.9930331620691616 fake_rejection=0.9956844068763594
-Split: evt10 (event-level, train 60 / val 10 / test 30)
-Tree_budget: 5000
-Chosen_trees: 1250 (prune_tol=0.001, val F2 0.990608, best prefix 4900 at 0.991600)
-pT-bin F2 set points (validation-derived):
-  pT [0.0, 2.0): thr=0.035900  n_val_sig=1640
-  pT [2.0, 5.0): thr=0.166241  n_val_sig=98588
-  pT [5.0, 10.0): thr=0.346932  n_val_sig=87105
-  pT [10.0, 50.0): thr=0.470598  n_val_sig=37745
-  pT [50.0, 200.0): thr=0.560072  n_val_sig=47743
-  pT [200.0, inf): thr=0.855624  n_val_sig=68751
-compact .bin md5: 8c936b2ef077e5501f18c6676b5c0cc1
+Model: XGBoost (400 trees, 46 features)
+F1_Threshold: 0.591177761554718
+F2_Threshold: 0.591177761554718
+Test_ROC_AUC: 0.9976384963998975
+Test_PR_AUC: 0.9921098642900099
+Test_F2_global_WP: 0.9703083208431704
+Test_F2_perbin_WP: 0.9606377521146132
+Test_perbin_WP: precision=0.8620647480553102 recall=0.9889072406610387 fake_rejection=0.9584619135912693
+Split: copygroup (train 60 / val 10 / test 30)
+Tree_budget: 400
+Chosen_trees: 400 (prune_tol=0.002, val F2 0.936175, best prefix 400 at 0.936175)
+pT-bin recall-target set points (validation-derived):
+  pT [0.0, 3.0): thr=0.024489  n_val_sig=8575
+  pT [3.0, 5.0): thr=0.447179  n_val_sig=31429
+  pT [5.0, 10.0): thr=0.961369  n_val_sig=39726
+  pT [10.0, 50.0): thr=0.988358  n_val_sig=18498
+  pT [50.0, 200.0): thr=0.998749  n_val_sig=23872
+  pT [200.0, inf): thr=0.999536  n_val_sig=36394
+pT-bin working points pinned on 3 files of independent events (bins with at least 10 reference muons below the threshold):
+  pT [0.0, 3.0): thr=0.088811  n_ref=1118
+  pT [3.0, 5.0): thr=0.461292  n_ref=3896
+  pT [5.0, 10.0): thr=0.927653  n_ref=3862
+  pT [10.0, 50.0): thr=0.998189  n_ref=9927
+  pT [50.0, 200.0): thr=0.998749  n_ref=1221  [validation threshold kept]
+  pT [200.0, inf): thr=0.999536  n_ref=6  [validation threshold kept]
+compact .bin md5: b418758c4ebc15e53c5827e7c7901c59

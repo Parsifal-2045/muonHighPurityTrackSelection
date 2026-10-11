@@ -1,10 +1,10 @@
 {
   "flavour": "IO seeds",
-  "started": "2026-09-23 00:35:45",
-  "host": "h100",
+  "started": "2026-10-10 16:20:58",
+  "host": "amd-w7900",
   "user": "lferragi",
   "python": "3.9.25",
-  "git_commit": "ad9361e5e2ac716f4b9889f33df6984993e92d75",
+  "git_commit": "e622949b3fefd856cbbc0f47a75c2c62ebdf07ef",
   "git_dirty": true,
   "packages": {
     "xgboost": "2.1.4",
@@ -16,47 +16,71 @@
     "onnxruntime": "1.19.2",
     "onnxmltools": "1.16.0"
   },
-  "cuda_visible_devices": "1",
-  "gpu": "NVIDIA H100 NVL",
-  "available_cpus": 94,
+  "cuda_visible_devices": null,
+  "gpu": null,
+  "available_cpus": 124,
   "config": {
     "signal_boost": 5.0,
-    "kin_weight_max": 20.0,
+    "kin_weight_max": 1.0,
     "max_depth": 12,
-    "learning_rate": 0.2,
+    "learning_rate": 0.1,
     "subsample": 0.8,
     "colsample_bytree": 0.8,
-    "min_child_weight": 1.0,
+    "min_child_weight": 5.0,
     "reg_alpha": 0.0,
     "reg_lambda": 1.0,
     "max_bin": 256,
     "seed": 42,
-    "n_estimators": 5000,
-    "prune_tol": 0.001,
-    "prune_grid_step": 50,
+    "n_estimators": 400,
+    "prune_tol": 0.002,
+    "prune_grid_step": 100,
     "prune_min_trees": 100,
-    "device": "cuda",
-    "split_mode": "evt10",
+    "device": "cpu",
+    "feature_workers": 9,
+    "nthread": 36,
+    "split_mode": "copygroup",
     "split_seed_offset": 0,
+    "copy_group_features": [
+      "muon_general_tracks_pt",
+      "muon_general_tracks_absEta",
+      "muon_general_tracks_dzErr"
+    ],
+    "copy_group_decimals": 2,
+    "dedup_copies": true,
+    "train_jitter": 0.0,
+    "wp_mode": "recall",
+    "wp_recall_targets": [
+      0.98,
+      0.99,
+      0.995,
+      0.995,
+      0.995,
+      0.995
+    ],
+    "wp_recall_global": 0.99,
     "pt_threshold_edges": [
       0.0,
-      2.0,
+      3.0,
       5.0,
       10.0,
       50.0,
       200.0
     ],
     "min_bin_signal": 100,
+    "wp_files": [
+      "/cms-hlt-nfs/user/lferragi/devMuons/campaigns/CAMPAIGN_20261003_MUONHP_V1/work/relval/relval_l1fix_D128/wp_seeds_ZMM.root",
+      "/cms-hlt-nfs/user/lferragi/devMuons/campaigns/CAMPAIGN_20261003_MUONHP_V1/work/relval/relval_l1fix_D128/wp_seeds_Bs.root",
+      "/cms-hlt-nfs/user/lferragi/devMuons/campaigns/CAMPAIGN_20261003_MUONHP_V1/work/relval/relval_l1fix_D128/wp_seeds_TTbar.root"
+    ],
+    "wp_files_min_rejected": 10,
     "onnx_opset": 13,
     "compact_bin_fp16": false,
     "permutation_importance": true,
     "perm_repeats": 5,
-    "ref_model_path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/seeds_xgb_output_33f_v2/model.json",
+    "ref_model_path": null,
     "verbose_eval": 250,
-    "name": "IO seeds",
-    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
-    "output_dir": "/shared/training/muonHighPurityTrackSelection/production/io/seeds/",
-    "cache_tag": "io_seeds",
+    "model_version": "v1",
+    "ref_version": "dev6",
     "branches": [
       "muon_general_tracks_p",
       "muon_general_tracks_pt",
@@ -86,6 +110,7 @@
       "muon_general_tracks_tpPt",
       "muon_general_tracks_tpEta",
       "muon_general_tracks_tpPhi",
+      "muon_general_tracks_tpCharge",
       "L1TkMu_pt",
       "L1TkMu_eta",
       "L1TkMu_phi",
@@ -94,248 +119,300 @@
       "L1TkMuStub_parentL1TkMu",
       "L1TkMuStub_etaRegion",
       "L1TkMuStub_phiRegion",
-      "L1TkMuStub_depthRegion"
+      "L1TkMuStub_depthRegion",
+      "dtSegment_seg4D_posGlb_eta",
+      "dtSegment_seg4D_posGlb_phi",
+      "dtSegment_seg4D_dirGlb_phi",
+      "dtSegment_station",
+      "dtSegment_seg4D_hasPhi",
+      "dtSegment_seg4D_hasZed",
+      "dtSegment_seg2D_phi_nHits",
+      "cscSegment_posGlb_eta",
+      "cscSegment_posGlb_phi",
+      "cscSegment_dirGlb_phi",
+      "cscSegment_station",
+      "cscSegment_nHits",
+      "gemSegment_posGlb_eta",
+      "gemSegment_posGlb_phi",
+      "gemSegment_dirGlb_phi",
+      "gemSegment_station",
+      "gemRecHit_g_phi",
+      "gemRecHit_g_r",
+      "gemRecHit_g_z",
+      "gemRecHit_layer",
+      "gemRecHit_bx",
+      "rpcRecHit_g_eta",
+      "rpcRecHit_g_phi",
+      "rpcRecHit_region",
+      "rpcRecHit_station",
+      "rpcRecHit_layer",
+      "rpcRecHit_bx",
+      "GenPart_pt",
+      "GenPart_eta",
+      "GenPart_phi",
+      "GenPart_pdgId",
+      "GenPart_status"
     ],
     "build_kwargs": {
       "prefix": "muon_general_tracks",
       "useL1TkMuFeatures": true,
-      "useL1TkMuStubFeatures": true
+      "useL1TkMuStubFeatures": true,
+      "chamberMatch": true,
+      "signalMuonFlag": true
     },
     "pt_feature": "muon_general_tracks_pt",
-    "drop_features": [
-      "muon_general_tracks_nLostHits",
-      "muon_general_tracks_hitEfficiency",
-      "muon_general_tracks_normalizedChi2",
-      "muon_general_tracks_chi2PerHit",
-      "muon_general_tracks_chi2",
-      "muon_general_tracks_impactSignificance",
-      "muon_general_tracks_dxyErr",
-      "muon_general_tracks_dszErr",
-      "muon_general_tracks_eta",
-      "muon_general_tracks_ptErr",
-      "muon_general_tracks_relUncertaintyProduct"
-    ],
+    "drop_features": null,
     "production_features": [
       "muon_general_tracks_p",
       "muon_general_tracks_pt",
-      "muon_general_tracks_etaErr",
-      "muon_general_tracks_phiErr",
       "muon_general_tracks_dzErr",
       "muon_general_tracks_qoverpErr",
-      "muon_general_tracks_lambdaErr",
-      "muon_general_tracks_nPixelHits",
-      "muon_general_tracks_nTrkLays",
-      "muon_general_tracks_nFoundHits",
-      "muon_general_tracks_impact3D",
       "muon_general_tracks_sigmaPtOverPt",
       "muon_general_tracks_sip2D",
-      "muon_general_tracks_sipZ",
-      "muon_general_tracks_dxyOverPt",
-      "muon_general_tracks_ptErrOverP",
-      "muon_general_tracks_dzOverDxy",
       "muon_general_tracks_absEta",
-      "L1TkMu_nStubs",
+      "muon_general_tracks_etaErr",
+      "muon_general_tracks_phiErr",
       "L1TkMu_nStubs_Endcap",
-      "L1TkMu_nStubs_Barrel",
-      "L1TkMu_stubQual_max",
-      "L1TkMu_stubMax_etaRegion",
-      "L1TkMu_stubMax_phiRegion",
-      "L1TkMu_stubMax_depthRegion",
-      "L1TkMu_hasMatch",
-      "L1TkMu_dR2min",
-      "L1TkMu_dPtNorm",
-      "L1TkMu_chi2Pt",
-      "L1TkMu_matchingScore",
-      "L1TkMu_nCompatible",
-      "L1TkMu_secondBest_dR2",
-      "is_low_pt"
+      "cm_bend_ME0",
+      "cm_bend_St1",
+      "cm_bend_St2",
+      "cm_bend_St3",
+      "cm_bend_St4",
+      "cm_bend_GE11",
+      "cm_bend_GE21",
+      "cm_bend_RPC1",
+      "cm_bend_RPC2",
+      "cm_bend_RPC3",
+      "cm_bend_RPC4",
+      "cm_dEta_ME0",
+      "cm_dEta_St1",
+      "cm_dEta_St2",
+      "cm_dEta_St3",
+      "cm_dEta_St4",
+      "cm_dEta_GE11",
+      "cm_dEta_GE21",
+      "cm_dEta_RPC1",
+      "cm_dEta_RPC2",
+      "cm_dEta_RPC3",
+      "cm_dEta_RPC4",
+      "cm_bendDiff_ME0",
+      "cm_bendDiff_St1",
+      "cm_bendDiff_St2",
+      "cm_bendDiff_St3",
+      "cm_bendDiff_St4",
+      "cm_bend2_ME0",
+      "cm_bend2_St1",
+      "cm_bend2_GE11",
+      "cm_bend2_GE21",
+      "cm_dEta2_ME0",
+      "cm_dEta2_St1",
+      "cm_dEta2_GE11",
+      "cm_dEta2_GE21",
+      "cm_bendDiff2_St1"
     ],
-    "cmssw_bin": "RecoMuon/L3TrackFinder/data/IO/muonHP_IO_seedsPath_forest_v3.bin",
-    "cmssw_cfi": "HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2MuonIOTrackSelectionHighPurityForest_cfi.py"
+    "wp_signal_feature": "gen_signal_muon",
+    "name": "IO seeds",
+    "data_chain": "seeds",
+    "output_dir": "production/io/seeds",
+    "cache_tag": "io_seeds",
+    "cmssw_bin": "RecoMuon/L3TrackFinder/data/IO/muonHP_IO_seedsPath_forest_v1.bin",
+    "cmssw_cfi": "HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2MuonIOTrackSelectionHighPurityForest_cfi.py",
+    "data_dir": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds",
+    "cache_dir": "/cms-hlt-nfs/user/lferragi/devMuons/campaigns/CAMPAIGN_20261003_MUONHP_V1/work/v1d/feature_cache"
   },
   "inputs": {
-    "data_dir": "/cms-hlt-nfs/user/lferragi/seedsSelector/",
-    "cache_key": "b9055a945548e51e9259e6f0e5fa603ce8437b247d8f3de39bb9d6e16f87a766",
-    "cache_path": "/tmp/lferragi/muonhp_feature_cache/io_seeds_b9055a945548e51e.npz",
+    "data_dir": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds",
+    "cache_key": "a8dfb4a191c57b9a6e4d7c029d129ea51a0021182b5bceaa4529ab9f928b804a",
+    "cache_path": "/cms-hlt-nfs/user/lferragi/devMuons/campaigns/CAMPAIGN_20261003_MUONHP_V1/work/v1d/feature_cache/io_seeds_a8dfb4a191c57b9a.npz",
     "cache_hit": true,
     "files": [
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_1.root",
-        "size": 4380917666,
-        "mtime_ns": 1778750031403171201
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_1.root",
+        "size": 1158488359,
+        "mtime_ns": 1791618434443047557
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_2.root",
-        "size": 4387547325,
-        "mtime_ns": 1778750044605907962
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_2.root",
+        "size": 1160498397,
+        "mtime_ns": 1791618441500909673
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_3.root",
-        "size": 4372292602,
-        "mtime_ns": 1778750057874643407
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_3.root",
+        "size": 1157888751,
+        "mtime_ns": 1791618435384029174
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/BsToMuMu_4.root",
-        "size": 4387054887,
-        "mtime_ns": 1778750071996361847
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_4.root",
+        "size": 1154846031,
+        "mtime_ns": 1791618424498241842
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_1.root",
-        "size": 10261178662,
-        "mtime_ns": 1776156208823532114
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_5.root",
+        "size": 1161507281,
+        "mtime_ns": 1791618436245012353
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_2.root",
-        "size": 10258010290,
-        "mtime_ns": 1776160920506303746
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_6.root",
+        "size": 1155640506,
+        "mtime_ns": 1791618427311186887
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_3.root",
-        "size": 10258089735,
-        "mtime_ns": 1776165625626128359
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_7.root",
+        "size": 1150580856,
+        "mtime_ns": 1791618433185072134
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunHighPt_4.root",
-        "size": 10256463719,
-        "mtime_ns": 1776170371768145813
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/BsToMuMu_8.root",
+        "size": 1155339476,
+        "mtime_ns": 1791618439955939856
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_1.root",
-        "size": 10206983977,
-        "mtime_ns": 1776270749073542956
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunHighPt_1.root",
+        "size": 5602455595,
+        "mtime_ns": 1791627543550112920
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_2.root",
-        "size": 10206520542,
-        "mtime_ns": 1776275427629885831
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunHighPt_2.root",
+        "size": 5604689062,
+        "mtime_ns": 1791627544141101383
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_3.root",
-        "size": 10208212266,
-        "mtime_ns": 1776280112988115592
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunHighPt_3.root",
+        "size": 5604862981,
+        "mtime_ns": 1791627549681993210
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_4.root",
-        "size": 10206196443,
-        "mtime_ns": 1776284799182347969
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunHighPt_4.root",
+        "size": 5585631694,
+        "mtime_ns": 1791627554489899348
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_5.root",
-        "size": 10208010225,
-        "mtime_ns": 1776289494617365811
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_1.root",
+        "size": 5587718153,
+        "mtime_ns": 1791624578181028339
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_6.root",
-        "size": 10209324140,
-        "mtime_ns": 1776294182938535395
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_2.root",
+        "size": 5589065264,
+        "mtime_ns": 1791624630959997302
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_7.root",
-        "size": 10207382019,
-        "mtime_ns": 1776298853383114164
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_3.root",
+        "size": 5586620303,
+        "mtime_ns": 1791624624324126934
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunLowPt_8.root",
-        "size": 10206454704,
-        "mtime_ns": 1776303504986039714
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_4.root",
+        "size": 5588345219,
+        "mtime_ns": 1791624646152700513
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_1.root",
-        "size": 10246590344,
-        "mtime_ns": 1776270768102162059
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_5.root",
+        "size": 5591017589,
+        "mtime_ns": 1791624656093506321
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_2.root",
-        "size": 10252169735,
-        "mtime_ns": 1776275476342910703
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_6.root",
+        "size": 5587756966,
+        "mtime_ns": 1791624655300521812
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_3.root",
-        "size": 10251351371,
-        "mtime_ns": 1776280169494984754
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_7.root",
+        "size": 5580115540,
+        "mtime_ns": 1791624676726103263
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunMediumPt_4.root",
-        "size": 10250086831,
-        "mtime_ns": 1776284900161326368
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunLowPt_8.root",
+        "size": 5554582320,
+        "mtime_ns": 1791624644176739113
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_1.root",
-        "size": 10348619576,
-        "mtime_ns": 1776329264257452689
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunMediumPt_1.root",
+        "size": 5592232036,
+        "mtime_ns": 1791624684434952671
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_2.root",
-        "size": 10360140347,
-        "mtime_ns": 1776334003860627530
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunMediumPt_2.root",
+        "size": 5593194779,
+        "mtime_ns": 1791624668979254598
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_3.root",
-        "size": 10349413466,
-        "mtime_ns": 1776338767003321666
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunMediumPt_3.root",
+        "size": 5593885117,
+        "mtime_ns": 1791624675980117836
       },
       {
-        "path": "/cms-hlt-nfs/user/lferragi/seedsSelector/gunTeVPt_4.root",
-        "size": 10359577387,
-        "mtime_ns": 1776343520755214526
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunMediumPt_4.root",
+        "size": 5591613699,
+        "mtime_ns": 1791624679719044796
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunTeVPt_1.root",
+        "size": 5671850431,
+        "mtime_ns": 1791621617929856237
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunTeVPt_2.root",
+        "size": 5664578753,
+        "mtime_ns": 1791621641687392140
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunTeVPt_3.root",
+        "size": 5674284470,
+        "mtime_ns": 1791621627453670192
+      },
+      {
+        "path": "/cms-hlt-nfs/user/lferragi/devMuons/singleIterIOTracking/trainingSamples/seeds/gunTeVPt_4.root",
+        "size": 5664717529,
+        "mtime_ns": 1791621623561746220
       }
     ]
   },
+  "bit_identical_copies": {
+    "tracks": 9127013,
+    "copies": 50583
+  },
   "split": {
     "train": {
-      "tracks": 12631462,
-      "signal": 2068285,
-      "events": 1505522
+      "tracks": 5463030,
+      "signal": 1108457,
+      "events": 1210963
     },
     "val": {
-      "tracks": 1986554,
-      "signal": 341572,
-      "events": 249687
+      "tracks": 905431,
+      "signal": 184361,
+      "events": 620631
     },
     "test": {
-      "tracks": 5735257,
-      "signal": 1020262,
-      "events": 746686
+      "tracks": 2707969,
+      "signal": 563070,
+      "events": 1062139
     }
   },
-  "device_used": "cuda",
-  "train_seconds": 519.8,
+  "device_used": "cpu",
+  "train_seconds": 382.1,
   "verification": {
     "compact_bin": {
-      "rows_checked": 303742,
-      "near_threshold_rows": 3939,
-      "max_abs_diff": 2.980232238769531e-07,
+      "rows_checked": 525868,
+      "near_threshold_rows": 253977,
+      "max_abs_diff": 3.2782554626464844e-07,
       "decision_flips": 0,
-      "seconds": 94.7
+      "threshold_ties_flipped": 0,
+      "seconds": 77.9
     },
     "onnx": {
       "rows_checked": 100000,
-      "max_abs_diff": 9.5367431640625e-07,
-      "single_track_us": 111.9
+      "max_abs_diff": 7.748603820800781e-07,
+      "single_track_us": 22.6
     }
   },
   "outputs": {
-    "model.json": "896a36f1644f5f67f87f15486d614887",
-    "model_compact.bin": "8c936b2ef077e5501f18c6676b5c0cc1",
-    "model_xgb.onnx": "f5de07ee752b9f7deaeb37f7d8608d92",
-    "thresholds.json": "163244a9a988d12b7ded7dd3d051e204"
+    "model.json": "fcd8aaaba8ef789a638d1e760f747ae5",
+    "model_compact.bin": "b418758c4ebc15e53c5827e7c7901c59",
+    "model_xgb.onnx": "47058daada662826cfc7464d42c9435f",
+    "thresholds.json": "a190869cdaaa3291a40e449deeb6d5c5"
   },
-  "reference": {
-    "path": "/shared/training/muonHighPurityTrackSelection/production/io/archive/seeds_xgb_output_33f_v2/model.json",
-    "trees": 4050,
-    "roc_auc": 0.9991306037776133,
-    "pr_auc": 0.9975259587785197,
-    "perbin_wp": {
-      "precision": 0.9613389708234479,
-      "recall": 0.9887969952806349,
-      "f2": 0.9831804175798418,
-      "fake_rejection": 0.991395324915509,
-      "tp": 1008832,
-      "fp": 40571,
-      "fn": 11430,
-      "tn": 4674424
-    }
-  },
-  "total_seconds": 1133.4,
-  "finished": "2026-09-23 00:54:39"
+  "reference": null,
+  "total_seconds": 1434.3,
+  "finished": "2026-10-10 16:44:52"
 }
