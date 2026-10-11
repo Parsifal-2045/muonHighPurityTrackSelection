@@ -1,40 +1,24 @@
 # Selector for muon tracks in the Pixel detector of CMS
-This repository contains code for the exploration and development of ML-based high purity selections for muon tracks in the Pixel detector of the CMS experiment. The project aims to be deployed for the Phase-2 High Level Trigger reconstruction, taking advantage of the improved PixelTracks reconstruction to effectively track muons without running a separate dedicated tracking iteration.
-Development based on CA extension for Phase 2 and previous integration of Alpaka-based PixelTracks in muons sequences, as shown in [22/07 HLT Upgrade meeting](https://indico.cern.ch/event/1570468/#4-single-iteration-io-muon-rec). NB the results shown there were preliminary; further developments used as baseline for this work: CA extension implemented in CMSSW (PR) and PixelTracks usage for muon tracking (PR).
+Machine-learning high-purity selections for muon tracks at the Phase-2 CMS High Level Trigger. The muon HLT reconstruction builds its inner tracks from pixel tracks, or from tracks seeded by LST, matched to L1 tracker muons, without a dedicated tracking iteration. The selectors of this repository reject the fake tracks among them (tracks not matched to a simulated muon), in place of the cut-based selection applied to general tracks, and do the same for the outside-in tracks.
 
-This work aims to reduce the fake tracks (i.e. not matched to a signal muon as per validation selection) present at the tracking level for HLT muon reconstruction, with the aim to replace the cut-based MVA selection typically applied to general tracks (meaning PixelTracks extended to the Outer Tracker via ckf).
-Development steps:
+The repository holds the training chain of the four selectors deployed in CMSSW (XGBoost forests), the models with their training records, and the tools that deploy them to a CMSSW area and validate them there.
 
-- [x] Extend CMSSW ntuple producer to include MC truth information (using the same simToReco and recoToSim associators used by the standard validation sequences) ([commit](https://github.com/Parsifal-2045/cmssw/commit/04dd7388b7e0e2b6c0dc053f85071fb3d856b857) on private CMSSW branch)
-- [x] Extract ntuples with variables of interest (mostly track quality parameters) and MC truth information (e.g. matched, duplicate, simulated pT, ...) ([commit](https://github.com/Parsifal-2045/cmssw/commit/f42d8e5b6ccfaa854c9a196621dfc4d7140c86e3) on private CMSSW branch)
-- [x] Visual inspection of extracted variables to figure out which ones could be used to discriminate good tracks from fakes ([link](https://lferragi.web.cern.ch/plots/muon_hlt_phase2/muonPixelTracksSelector/) to plots and ntuples)
-- [x] Implementation and training of ML models: residual DNNs and gradient-boosted forests (XGBoost), trained at Phase-2 pileup conditions on a varied sample (particle-gun muons over the full HLT pT spectrum plus low-pT Bs→μμ)
-- [x] Analysis of model results and fine tuning: feature-set pruning (44 → 33 IO features, 26 → 22 OI features) via gain/permutation importance, DNN architecture scan, F2-based threshold optimisation
-- [x] Export of the models for CMSSW: ONNX (opset 13) for the DNNs and a custom compact binary format for the forests (2.5x smaller than the ONNX serialisation), each verified numerically against the Python inference (< 1e-5)
-- [x] Integration in CMSSW (`RecoMuon/L3TrackFinder` on the [`20_1_X_muonTracking` branch](https://github.com/Parsifal-2045/cmssw/tree/20_1_X_muonTracking) of the private Parsifal-2045/cmssw fork) with stream producers for both inference backends, wired into the Phase-2 HLT muon sequences behind process modifiers
-- [x] Bit-level cross-check of the C++ and Python feature extraction on a fixed sample (`production/features_validation/`, IO selectors)
-- [x] Forests selected as the production backend for all four selectors; v2 campaign: event-level (evt10) splits, validation-only working-point and forest-size selection, budget-and-prune tree sizing, per-pT-bin set points
-- [x] v3 campaign: shared and reproducible training pipeline, float64 feature convention shared with CMSSW (fixes a training/inference mismatch of the IO selectors), validation-only hyperparameter scan (deep forests), retrained and redeployed models, exact CMSSW/Python parity on real events, fixes to the L1TkMuon seed selector feeding the IO seeds model
-- [ ] v4: training n-tuples re-produced with the current HLT configuration (including the fixed seed selector), retraining with the same chain (How to run the training chain) and a larger out-of-sample check of the forest depth
-
-The first three steps had been completed on a sample of 10'000 ZMM events at 200 PU as a bootstrap; all subsequent developments use the production samples described below.
-
-**Contents:** [Repository structure](#repository-structure) · **[How to run the training chain](#how-to-run-the-training-chain)** · [Production models](#production-models-v3-production) · [Forest training pipeline](#forest-training-pipeline-v3-productionforest_pipelinepy) · [Feature parity between training and CMSSW](#feature-parity-between-training-and-cmssw) · [CMSSW integration](#cmssw-integration) · [L1TkMuon input selectors](#l1tkmuon-input-selectors) · [Decisions and rationale](#decisions-and-rationale) · [Possible improvements](#possible-improvements)
+**Contents:** [Repository structure](#repository-structure) · **[How to run the training chain](#how-to-run-the-training-chain)** · [Deployed models (v1)](#deployed-models-v1-production) · [Validation in CMSSW (v1)](#validation-in-cmssw-v1) · [Forest training pipeline](#forest-training-pipeline-productionforest_pipelinepy) · [Feature parity between training and CMSSW](#feature-parity-between-training-and-cmssw) · [CMSSW integration](#cmssw-integration) · [Decisions and rationale](#decisions-and-rationale)
 
 ## Repository structure
 
 Production code and models (the **XGBoost forests are the production architecture**; DNNs are kept as the alternative backend, currently not wired in CMSSW):
 
-- `production/forest_pipeline.py` — the shared training pipeline of the four forests (features and cache, split, training, size selection, working points, test evaluation, verified exports, provenance records). `production/pixel_xgb.py`, `production/seeds_xgb.py`, `production/oi/OI_pixel_xgb.py`, `production/oi/OI_general_xgb.py` only hold the flavour configuration.
-- `production/pixel_features.py` — IO feature extraction (parametrised by the n-tuple branch prefix: pixel and seeds selectors share it), the production feature ABI (`io_production_features()`), evaluation helpers. `production/oi/OI_features.py` — the OI counterpart (`OI_PRODUCTION_FEATURES`).
-- `production/onnx_utils.py` — ONNX Runtime sessions with explicit thread pools, pinned TorchScript exporter for the DNNs.
-- `production/io/{pixel,seeds}/`, `production/oi/{pixel,general}/` — the production (v3) models with their full records: `train.log`, `thresholds.json`/`.txt`, `manifest.json` (git commit, packages, GPU, input files, cache key, verification results), `cmssw_cfi_snippet.py`, feature importances, plots and the exports (`model.json`, `model_compact.bin`, `model_xgb.onnx`). Superseded models: `production/io/archive/` (v1 forests, DNNs, v2 forests `*_v2`) and `production/oi/archive/` (v2 OI forests); round-1 OI feature studies in `production/oi/*_26f/`.
-- `production/tuning/` — validation-only hyperparameter scan (`forest_scan.py`, results in `tuning/results/`, summary `summarize_scan.py`).
-- `production/check_consistency.py` — checks training records, exports and (with `--cmssw-src`) the CMSSW deployment against each other. `production/deploy_cmssw.py` — installs the models in a CMSSW area (data files, cfi working points, data README). `production/make_summary.py` — result tables of the production models against the previous generation (`production/results/`).
-- `production/features_validation/` — CMSSW/Python cross-check on real events (`validate_cmssw.py`, timing customisation `forest_timing_cff.py`); results in `features_validation/results/`. The 44-feature CSVs of the previous check are kept for reference.
+- `production/forest_pipeline.py` — the shared training pipeline of the four forests (features and cache, split, training, size selection, working points, test evaluation, verified exports, provenance records). `production/pixel_xgb.py`, `production/seeds_xgb.py` (with `production/io_xgb_common.py`: features, recipe and working points of the two IO forests), `production/oi/OI_pixel_xgb.py`, `production/oi/OI_general_xgb.py` only hold the flavour configuration.
+- `production/pixel_features.py` — IO feature extraction (parametrised by the n-tuple branch prefix: pixel and seeds selectors share it), the production feature ABI (`io_production_features()`), evaluation helpers. `production/chamber_match.py` — the matching of a track to the muon chambers (the candidates of every muon station and their raw quantities), used by the IO extraction. `production/oi/OI_features.py` — the OI counterpart (`OI_PRODUCTION_FEATURES`).
+- `production/onnx_utils.py` — ONNX Runtime sessions with explicit thread pools, the number of CPUs the process may use, pinned TorchScript exporter for the DNNs.
+- `production/io/{pixel,seeds}/`, `production/oi/{pixel,general}/` — the deployed (v1) models with their records. Version-controlled: `model_compact.bin` (the file deployed to CMSSW), `train.log`, `thresholds.json`/`.txt`, `manifest.json` (git commit, packages, device, input files, cache key, verification results), `cmssw_cfi_snippet.py` and `feature_importance.txt`. A training also writes `model.json`, `model_xgb.onnx` and the plots, which are not version-controlled: `check_consistency.py` and the tools that score a model (`validate_cmssw.py`, `compare_models_relval.py`, `analyze_input_selectors.py`) read `model.json`, so they need a model directory as a training leaves it. `production/io/archive/` and `production/oi/archive/` hold the reference generations the comparisons are made against, dev5 and dev6 (`model_compact.bin`, working points, feature importances).
+- `production/tuning/` — quick validation-only hyperparameter scan (`forest_scan.py` writes its results to `tuning/results/`, `summarize_scan.py` tabulates them).
+- `production/check_consistency.py` — checks training records, exports and (with `--cmssw-src`) the CMSSW deployment against each other. `production/deploy_cmssw.py` — installs the models in a CMSSW area (data files, cfi working points, data README). `production/make_summary.py` — result tables of the production models from their records (`production/results/`).
+- `production/features_validation/` — CMSSW/Python cross-check on real events (`validate_cmssw.py`, timing customisation `forest_timing_cff.py`), comparison of model generations on independent events (`compare_models_relval.py`), L3 muons at the end of the chain (`l3_muon_tables_cff.py`, `count_l3_muons.py`); results in `features_validation/results/`.
 - `production/input_selectors/` — efficiency study of the L1TkMuon input selectors (cmsRun customisation `input_selector_study_cff.py`, analysis `analyze_input_selectors.py`, results in `input_selectors/results/`).
 - `production/dnn/` — the (currently unwired) DNN trainers and architecture benchmark.
-- `tests/` — development iterations and earlier studies (kept intact).
+- `tests/` — exploratory scripts, not part of the production chain.
 
 ## How to run the training chain
 
@@ -42,23 +26,23 @@ Every input is given on the command line, with no environment variables to set a
 
 ### 1. Setup
 
-- Python ≥ 3.9 with the packages of `production/requirements.txt` (e.g. `python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt`). A CUDA GPU is used when available, the CPU otherwise (announced in the log).
-- The v3 models were trained with xgboost 2.1.4, numpy 2.0.2, awkward 2.8.12, uproot 5.6.9, scikit-learn 1.6.1, onnx 1.19.1, onnxruntime 1.19.2, onnxmltools 1.16.0 (recorded in every `manifest.json`). With the same versions and inputs a re-run reproduces `model.json`, `model_compact.bin`, `model_xgb.onnx` and the working points bit for bit.
+- Python ≥ 3.9 with the packages of `production/requirements.txt` (e.g. `python3 -m venv venv && . venv/bin/activate && pip install -r requirements.txt`). A CUDA GPU is used when available, the CPU otherwise (announced in the log; `--device cpu` forces it).
+- The v1 models were trained on CPU with xgboost 2.1.4, numpy 2.0.2, awkward 2.8.12, uproot 5.6.9, scikit-learn 1.6.1, onnx 1.19.1, onnxruntime 1.19.2, onnxmltools 1.16.0 (recorded in every `manifest.json`). A re-run with the same versions and inputs is not guaranteed to reproduce the models bit for bit. They were trained with the code of commit `3814083` before it was committed: the manifests, the cfi comments and the CMSSW data README therefore name its parent `e622949`, with `git_dirty: true` in the manifests.
 - The CMSSW steps (6 and 7) need a CMSSW area with the `RecoMuon/L3TrackFinder` integration (see CMSSW integration), built and set up with `cmsenv`.
 
 ### 2. Inputs
 
-The training n-tuples are the `NANO:@MUHLTTraining` output of each HLT chain, one directory per chain: every `*.root` file of the directory is read, one file per sample. File names carry no meaning to the pipeline (the split is by event number within each file). The IO and OI models of a chain read the same files (different branches).
+The training n-tuples are the `NANO:@MUHLTTraining` output of each HLT chain, one directory per chain: every `*.root` file of the directory is read, one file per sample. File names carry no meaning to the pipeline. The IO and OI models of a chain read the same files (different branches). The IO selectors need the tables of the muon local reconstruction (DT, CSC and GEM segments, GEM and RPC rec-hits), filled, with the global coordinates of the RPC rec-hits (`rpcRecHit_g_eta`, `rpcRecHit_g_phi`).
 
 | Flag | Script | Value |
 |---|---|---|
 | `--data-dir DIR` (required) | `pixel_xgb.py`, `oi/OI_pixel_xgb.py`, `dnn/pixel_model.py` | n-tuples of the pixel-track chain (process modifier `phase2MuonPixelTracksSelector`) |
 | `--data-dir DIR` (required) | `seeds_xgb.py`, `oi/OI_general_xgb.py`, `dnn/seeds_model.py` | n-tuples of the seeds chain (process modifier `phase2MuonSeedsSelector`) |
+| `--wp-files FILE [FILE ...]` | `pixel_xgb.py`, `seeds_xgb.py` | n-tuples of independent events of the same chain (e.g. RelVal samples), on which the working points are pinned (step 4) |
 | `--data-dir DIR` (required) | `tuning/forest_scan.py` | n-tuples of the scanned flavour's chain |
-| `--pixel-data-dir DIR`, `--seeds-data-dir DIR` (required) | `make_summary.py` | n-tuples of both chains |
-| `--cache-dir DIR` | forest trainings, `tuning/forest_scan.py`, `make_summary.py` | feature cache (default `/tmp/$USER/muonhp_feature_cache`; 1.9 / 3.8 / 0.6 / 0.8 GB for IO pixel / IO seeds / OI pixel / OI general) |
-| `--cmssw-src DIR`, `--out DIR` (required), `--relval-zmm DIR`, `--relval-bs DIR` | `features_validation/run_cmssw_validation.sh` | CMSSW `src/`, output directory, GEN-SIM-DIGI-RAW RelVal directories (default: the CMSSW_20_0_0_pre1 PU200 RelVals on EOS used for v3) |
-| `--data-dir DIR` (required) | `tests/*_model.py`, `io/archive/test/*_model.py` | n-tuples of the earlier studies |
+| `--cache-dir DIR` | forest trainings, `tuning/forest_scan.py` | feature cache (default `/tmp/$USER/muonhp_feature_cache`; 2.1 / 3.7 / 0.4 / 0.4 GB for IO pixel / IO seeds / OI pixel / OI general) |
+| `--cmssw-src DIR`, `--out DIR` (required), `--relval-zmm DIR`, `--relval-bs DIR` | `features_validation/run_cmssw_validation.sh` | CMSSW `src/`, output directory, GEN-SIM-DIGI-RAW RelVal directories (default: the CMSSW_20_0_0_pre1 PU200 RelVals on EOS) |
+| `--data-dir DIR` (required) | `tests/*_model.py`, `io/archive/test/*_model.py` | n-tuples for the exploratory scripts |
 
 The commands below use two shell variables for the n-tuple directories:
 ```bash
@@ -66,37 +50,41 @@ PIXEL=/path/to/pixel-chain/ntuples
 SEEDS=/path/to/seeds-chain/ntuples
 ```
 
+Before training on a new production, check that the L1 tracker muons are there: the fraction of generated muons with an L1 tracker muon within ΔR < 0.1, per |η| region (Forest training pipeline, Data).
+
 ### 3. Start a new model version (only when retraining for deployment)
 
-Skip this step to reproduce the deployed v3 models. A retraining meant for CMSSW gets a new version: the new models are compared with the deployed ones, and they get new file names (cms-data files are immutable). Archive the deployed models:
+Skip this step to reproduce the deployed v1 models. A retraining meant for CMSSW gets a new version: the new models are compared with the deployed ones, and they get new file names (cms-data files are immutable). Archive the deployed models:
 ```bash
-cp -a io/pixel io/archive/pixel_xgb_output_33f_v3; cp -a io/seeds io/archive/seeds_xgb_output_33f_v3
-cp -a oi/pixel oi/archive/pixel_22f_v3;            cp -a oi/general oi/archive/general_22f_v3
+cp -a io/pixel io/archive/pixel_xgb_output_46f_v1; cp -a io/seeds io/archive/seeds_xgb_output_46f_v1
+cp -a oi/pixel oi/archive/pixel_22f_v1;            cp -a oi/general oi/archive/general_22f_v1
 ```
-then set `model_version="v4"` and `ref_version="v3"` in `forest_pipeline.DEFAULTS`. This is the only place holding the version: it fills the deployed file names (`cmssw_bin`) and the reference model of every report (`ref_model_path`).
+then set `model_version` to the new label and `ref_version` to the deployed one (`"v1"`) in `forest_pipeline.DEFAULTS`. This is the only place holding the version: it fills the deployed file names (`cmssw_bin`) and the reference model of the OI reports (`ref_model_path`).
 
 ### 4. Train the four forests
 
 ```bash
-python pixel_xgb.py         --data-dir $PIXEL --force   # IO pixel   -> io/pixel/
-python seeds_xgb.py         --data-dir $SEEDS --force   # IO seeds   -> io/seeds/
-python oi/OI_pixel_xgb.py   --data-dir $PIXEL --force   # OI pixel   -> oi/pixel/
-python oi/OI_general_xgb.py --data-dir $SEEDS --force   # OI general -> oi/general/
+python pixel_xgb.py         --data-dir $PIXEL --force --wp-files $WP_PIXEL   # IO pixel   -> io/pixel/
+python seeds_xgb.py         --data-dir $SEEDS --force --wp-files $WP_SEEDS   # IO seeds   -> io/seeds/
+python oi/OI_pixel_xgb.py   --data-dir $PIXEL --force                        # OI pixel   -> oi/pixel/
+python oi/OI_general_xgb.py --data-dir $SEEDS --force                        # OI general -> oi/general/
 python check_consistency.py
 ```
-On one H100 the trainings take 13 / 19 / 5 / 5 min, plus a one-off feature extraction for new n-tuples (later runs read the cache). Each writes its model directory: model, exports, working points, `train.log` (ending with the comparison to the reference model on the same test split), `thresholds.json`, `manifest.json` and `cmssw_cfi_snippet.py`. `check_consistency.py` re-exports every model from `model.json` and checks tree counts, checksums, the feature ABI, the exports and that the logs are free of warnings.
+`$WP_PIXEL` and `$WP_SEEDS` are the n-tuples of independent events of each chain on which the IO working points are pinned (Forest training pipeline, Working points); without `--wp-files` the working points come from the validation split of the training sample. They must not be the events used to validate the result. For v1 they are 14,500 pre3 D128 RelVal events per chain (ZMM, BsToMuMu, TTbar at 200 PU), with the L1 tracker muons re-emulated (step 7).
 
-Other options: `--force` replaces an existing model directory (without it the training refuses to overwrite), `--output-dir DIR` writes elsewhere, `--set key=value` overrides a configuration value (e.g. `--set max_depth=8`), `--device cpu` forces the CPU. Do not edit `pixel_features.py` or `oi/OI_features.py` while a training runs: the job stops (see the feature cache).
+The v1 trainings took 24 / 24 / 9 / 9 min (IO on 36 CPU threads, OI on 24), plus a one-off feature extraction for new n-tuples (about 35 min per IO chain on 9 processes, on a node busy with other jobs; later runs read the cache). Each writes its model directory: model, exports, working points, `train.log`, `thresholds.json`, `manifest.json` and `cmssw_cfi_snippet.py`. `check_consistency.py` re-exports every model from `model.json` and checks tree counts, checksums, the feature ABI, the exports and that the logs are free of warnings.
+
+Other options: `--force` replaces an existing model directory (without it the training refuses to overwrite), `--output-dir DIR` writes elsewhere, `--set key=value` overrides a configuration value (e.g. `--set max_depth=8`, `--set nthread=44`, `--set feature_workers=14`), `--device cpu` forces the CPU. The feature extraction of the IO chains takes about 10 GB per process. Do not edit `pixel_features.py`, `chamber_match.py` or `oi/OI_features.py` while a training runs: the job stops (see the feature cache).
 
 ### 5. Re-check the hyperparameters (optional)
 
-Recommended when the samples change substantially. Per flavour (`io_pixel`, `io_seeds`, `oi_pixel`, `oi_general`), on the production validation fold and on the confirmation fold:
+Recommended when the samples or the features change substantially. Train the flavour with the alternative values into a scratch directory and compare the test split of its records and the fakes kept on independent events (step 7):
 ```bash
-python tuning/forest_scan.py io_pixel --data-dir $PIXEL --configs base d10 d12 d12_lr02
-python tuning/forest_scan.py io_pixel --data-dir $PIXEL --configs base d10 d12 d12_lr02 --val-fold 9
-python tuning/summarize_scan.py > results/tuning_summary.md
+python pixel_xgb.py --data-dir $PIXEL --output-dir $SCRATCH/io_pixel_d10 --set max_depth=10 --no-permutation-importance
+python features_validation/compare_models_relval.py --family IO --prefix muon_pixel_tracks \
+    --nano $RELVAL_NANO --models io/pixel $SCRATCH/io_pixel_d10
 ```
-`python tuning/forest_scan.py --list` shows the configurations. Change `DEFAULTS` (IO) or `OI_BASE` (OI) only for a configuration ahead on both folds at comparable inference cost, then retrain (step 4).
+Decide on the independent events, at equal recall (thresholds giving every model the same fraction of muons kept; the working points of scratch trainings come from the training sample and are not at equal recall), and with more than one seed: two trainings that differ only by the seed differ by about 7% in fakes kept. The fake rejection of the copy-aware test split is not enough: it keeps improving with more trees and with importance-pruned feature lists that keep more fakes on independent events (Hyperparameters). Change `io_xgb_common.RECIPE` (IO) or `OI_BASE` (OI) only for a configuration clearly ahead there, at an acceptable inference cost, then retrain (step 4). `tuning/forest_scan.py` (`--list` shows its configurations) is a quicker scan on event-level validation folds: forests deeper than about 6 partly memorise the recurring pileup tracks of such folds, so use it for shallow forests only.
 
 ### 6. Deploy to CMSSW
 
@@ -109,239 +97,258 @@ python check_consistency.py --cmssw-src $CMSSW_BASE/src
 
 ### 7. Validate in CMSSW
 
-L1 + HLT + training NANO on 250 ZMM and 250 BsToMuMu RelVal events per chain (four parallel jobs), then the track-by-track parity, the out-of-sample model comparison and the input-selector efficiencies (`OUT` = any scratch directory; replace `v4` by the new version):
+Validate in the release family the training n-tuples were produced with (CMSSW_20_1_0_pre3 or later for v1: the L1 muon emulation differs between releases). `ZMM_D128` and `BS_D128` are the `GEN-SIM-DIGI-RAW/PU_150X_mcRun4_realistic_v1_STD_D128_RegeneratedGS_PU_20260903_192421_RV19-v1/2830000` directories of `RelValZMM_14` and `RelValBsToMuMu_14TeV` under `/eos/cms/store/relval/CMSSW_20_1_0_pre3/`; the script reads the first three files of each.
+
+**L1 tracker muons of the pre3 RelVals.** The jobs run `L1P2GT,HLT` on the stored L1 objects, and the files made with the L1 emulation of CMSSW_20_1_0_pre3 store an L1 tracker muon for only about 30% of the barrel muons ([cms-sw/cmssw#52096](https://github.com/cms-sw/cmssw/issues/52096); Forest training pipeline, Data). On such files the stub and tracker-muon producers have to run again at the start of the job, in an area where `L1Trigger/Phase2L1GMT` has the workaround built:
+```python
+from L1Trigger.Phase2L1GMT.gmtStubs_cfi import gmtStubs
+from L1Trigger.Phase2L1GMT.gmtTkMuons_cfi import gmtTkMuons
+process.l1tStubsGmt = gmtStubs.clone()
+process.l1tTkMuonsGmt = gmtTkMuons.clone(srcStubs="l1tStubsGmt:tps")   # as in SimL1Emulator_cff
+process.l1MuonReEmulation = cms.Path(process.l1tStubsGmt + process.l1tTkMuonsGmt)
+process.schedule.insert(0, process.l1MuonReEmulation)
+```
+`run_cmssw_validation.sh` does not add these lines: append them to the `final_<chain>_<sample>_cfg.py` files it writes and run those again (`cmsRun final_<chain>_<sample>_cfg.py`). Every RelVal number of this README comes from jobs with the L1 tracker muons re-emulated this way; with them 97% of the ZMM muons above 10 GeV have an L1 tracker muon in the barrel and 96% in the endcaps (28% in the barrel with the stored objects).
+
+L1 + HLT + training NANO on 250 ZMM and 250 BsToMuMu RelVal events per chain (four parallel jobs), then the track-by-track parity, the out-of-sample model comparison and the input-selector efficiencies (`OUT` = any scratch directory; replace `v1` by the new version and the reference models by those to compare with):
 ```bash
-features_validation/run_cmssw_validation.sh --cmssw-src $CMSSW_BASE/src --out $OUT
+features_validation/run_cmssw_validation.sh --cmssw-src $CMSSW_BASE/src --out $OUT \
+    --geometry ExtendedRun4D128 --era Phase2C26I13M9 --relval-zmm $ZMM_D128 --relval-bs $BS_D128
 for s in ZMM Bs; do
   python features_validation/validate_cmssw.py --chain pixel --nano $OUT/final_pixel_$s.root --log $OUT/final_pixel_$s.log \
-      --io-model io/pixel --oi-model oi/pixel --json features_validation/results/parity_v4_pixel_$s.json
+      --io-model io/pixel --oi-model oi/pixel --json features_validation/results/parity_v1_pixel_$s.json
   python features_validation/validate_cmssw.py --chain seeds --nano $OUT/final_seeds_$s.root --log $OUT/final_seeds_$s.log \
-      --io-model io/seeds --oi-model oi/general --json features_validation/results/parity_v4_seeds_$s.json
+      --io-model io/seeds --oi-model oi/general --json features_validation/results/parity_v1_seeds_$s.json
 done
 python features_validation/compare_models_relval.py --family IO --prefix muon_pixel_tracks \
-    --nano $OUT/final_pixel_{ZMM,Bs}.root --models io/archive/pixel_xgb_output_33f_v3 io/pixel \
-    --json features_validation/results/relval_model_comparison_io_pixel.json
+    --nano $OUT/final_pixel_{ZMM,Bs}.root \
+    --models io/archive/pixel_xgb_output_33f_dev5 io/archive/pixel_xgb_output_46f_dev6 io/pixel \
+    --json features_validation/results/relval_model_comparison_io_pixel_ZMMBs.json
 python features_validation/compare_models_relval.py --family IO --prefix muon_general_tracks \
-    --nano $OUT/final_seeds_{ZMM,Bs}.root --models io/archive/seeds_xgb_output_33f_v3 io/seeds \
-    --json features_validation/results/relval_model_comparison_io_seeds.json
+    --nano $OUT/final_seeds_{ZMM,Bs}.root \
+    --models io/archive/seeds_xgb_output_33f_dev5 io/archive/seeds_xgb_output_46f_dev6 io/seeds \
+    --json features_validation/results/relval_model_comparison_io_seeds_ZMMBs.json
 python input_selectors/analyze_input_selectors.py --chain pixel --nano $OUT/final_pixel_{ZMM,Bs}.root \
-    --label ZMM BsToMuMu --io-model io/pixel --json input_selectors/results/pixel_chain_v4.json
+    --label ZMM BsToMuMu --io-model io/pixel --json input_selectors/results/pixel_chain_v1.json
 python input_selectors/analyze_input_selectors.py --chain seeds --nano $OUT/final_seeds_{ZMM,Bs}.root \
-    --label ZMM BsToMuMu --io-model io/seeds --json input_selectors/results/seeds_chain_v4.json
+    --label ZMM BsToMuMu --io-model io/seeds --json input_selectors/results/seeds_chain_v1.json
 ```
-`--models` lists the reference (the models archived in step 3) first. Expected: bit-identical features and 0 differing decisions for all four selectors (any difference means the training and CMSSW extractions diverged). The per-module times are in the TimeReport of `$OUT/final_*.log`. Other options of the validation script: `--events N`, `--threads N`, `--relval-zmm DIR`, `--relval-bs DIR`, and `--alt-models DIR` to time other models next to the deployed ones (see its `--help`).
+`--models` lists the references first; every model is scored with its own feature list and at its own working points (`--family OI` does the same for the OI forests, on the `l3_tk_OI_*` tracks of the n-tuples). Expected: bit-identical features and 0 differing decisions for all four selectors (any difference means the training and CMSSW extractions diverged). The per-module times are in the TimeReport of `$OUT/final_*.log`. Other options of the validation script: `--events N`, `--threads N`, `--relval-zmm DIR`, `--relval-bs DIR`, and `--alt-models DIR` to time other models next to the deployed ones (see its `--help`).
+
+**L3 muons at the end of the chain.** The selectors act on tracks; what reaches the trigger are the L3 muons after the muon identification. To count them, add `features_validation/l3_muon_tables_cff.py` to a job of the same kind (`process = customise_l3_muon_tables(process)`; with `pass_through=True` the selectors keep every track, the chain without a high-purity selection) and run
+```bash
+python features_validation/count_l3_muons.py --sample "v1 pixel" $OUT/v1_pixel_{ZMM,Bs}.root \
+    --sample "no selection, pixel" $OUT/passall_pixel_{ZMM,Bs}.root --json features_validation/results/l3_muons_v1.json
+```
+on the same events processed with each configuration (fake muons per event, muons per event and efficiency for the generated muons, before and after the identification). Only the full chain gives these numbers: with fewer fake tracks, fewer genuine muons lose their segments to a fake in the arbitration of the muon identification and more standalone muons are passed to the outside-in step.
 
 ### 8. Summarise the results
 
 ```bash
-python make_summary.py --pixel-data-dir $PIXEL --seeds-data-dir $SEEDS --json results/summary_v4_vs_v3.json
+python make_summary.py --json results/summary_v1.json
 ```
-prints the result tables of this README (production vs reference models, per working-point bin); update the result sections below with them.
+prints the result tables of this README from the training records of the four production models (per model and per working-point bin); update the result sections below with them.
 
-## Production models (v3, `production/`)
+## Deployed models (v1, `production/`)
 
 Four track selectors cover the Phase-2 muon HLT chains. Inside-out (IO): **pixel tracks** (`hltPhase2MuonPixelTracks`, pixel-track chain, n-tuple `muon_pixel_tracks_*`) and **IO tracks from LST seeds** (`hltPhase2MuonIOTracks`, seeds chain, `muon_general_tracks_*`). Outside-in (OI, `hltPhase2L3OIMuCtfWithMaterialTracks`, `l3_tk_OI_*`, with L2 standalone-muon matching): **OI pixel** (trained on the pixel-chain sample) and **OI general** (seeds-chain sample).
 
-Test split (event-level, never used for any choice), deployed per-pT-bin working points; v2 = previous production models, evaluated on the same test tracks with their own deployed working points (and the v3 feature convention, i.e. as they would run in CMSSW now). Node visits = mean number of internal tree nodes visited per track by the CMSSW traversal (the inference cost); "fakes kept" = unmatched test tracks accepted.
+The aim is a track-level stand-in for the muon identification: keep every genuine muon track and remove as many fakes as possible. The IO selectors combine track quantities with the matching of the track to the muon chambers (Feature sets). v1 (trained 2026-10-10) is evaluated in three ways: on the test split of the training samples, built so that a recurring pileup track never sits in both training and test (Forest training pipeline); on the tracks of independent RelVal events; and on the L3 muons at the end of the HLT chain run on the same events. Two earlier generations are the references: **dev5** (33 track and L1 features, no chamber matching) and **dev6** (the v1 features and recipe, trained and pinned on samples in which the L1 emulation lost most of the barrel muons; Forest training pipeline, Data).
 
-| Model | Version | Trees | Nodes | .bin [MB] | Node visits / track | ROC-AUC | PR-AUC | Precision | Recall | F2 | Fake rejection | Fakes kept |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| IO pixel | v2 | 3250 | 378,584 | 4.9 | 19,480 | 0.99956 | 0.99931 | 0.9743 | 0.9947 | 0.9906 | 0.9845 | 27,392 |
-| IO pixel | **v3** | 800 | 1,197,968 | 15.6 | **9,251** | 0.99977 | 0.99963 | **0.9822** | **0.9959** | **0.9932** | 0.9893 | **18,827** |
-| IO seeds | v2 | 4050 | 475,524 | 6.2 | 24,280 | 0.99913 | 0.99753 | 0.9613 | 0.9888 | 0.9832 | 0.9914 | 40,571 |
-| IO seeds | **v3** | 1250 | 1,919,368 | 25.0 | **14,669** | 0.99952 | 0.99880 | **0.9803** | **0.9930** | **0.9905** | 0.9957 | **20,348** |
-| OI pixel | v2 | 1200 | 119,678 | 1.6 | 7,026 | 0.99970 | 0.99703 | 0.9680 | 0.9893 | 0.9849 | 0.9986 | 1,981 |
-| OI pixel | **v3** | 300 | 166,972 | 2.2 | **2,524** | 0.99971 | 0.99722 | 0.9710 | 0.9891 | 0.9854 | 0.9987 | 1,791 |
-| OI general | v2 | 850 | 88,912 | 1.2 | 5,025 | 0.99982 | 0.99884 | 0.9838 | 0.9935 | 0.9916 | 0.9983 | 2,858 |
-| OI general | **v3** | 200 | 137,918 | 1.8 | **1,700** | 0.99983 | 0.99888 | 0.9828 | 0.9939 | 0.9916 | 0.9982 | 3,028 |
+**Working points**: one threshold per pT bin, keeping a fixed fraction of the muons of the bin, the same targets for the four selectors.
 
-IO: at higher muon efficiency, the fakes kept drop by 31% (pixel) and 50% (seeds), with half / 60% of the node visits per track (the deep forests are larger, so the CMSSW wall time does not drop accordingly: see Behaviour in CMSSW). OI: performance unchanged within the statistical precision of the (smaller) OI samples, with a third of the node visits. These are training-distribution (test split) numbers; on independent RelVal events the v2/v3 differences are within the statistical reach of the check (see the out-of-sample check).
+| pT bin [GeV] | 0–3 | 3–5 | 5–10 | 10–50 | 50–200 | > 200 |
+|---|---|---|---|---|---|---|
+| Muons kept (target) | 98% | 99% | 99.5% | 99.5% | 99.5% | 99.5% |
+| IO thresholds set on | RelVal | RelVal | RelVal | RelVal | validation split | validation split |
 
-**v3 per working-point bin** (test split; threshold = deployed cfi value, pT of the track; `production/results/summary_v3_vs_v2.json`):
+For the IO selectors the target refers to the muons of the signal event, and the thresholds of the four bins below 50 GeV are pinned on 14,500 independent RelVal events per chain (7,000 ZMM, 7,000 BsToMuMu and 500 TTbar pre3 D128 events at 200 PU with the L1 tracker muons re-emulated, disjoint from the validation events below); the two bins above 50 GeV, which those events do not populate enough, and the OI selectors use the validation split of the training sample (gun and Bs muons). The files of both RelVal sets are listed in `production/features_validation/relval_d128_tuning_files.txt`.
 
-| Model | pT bin [GeV] | Threshold | Signal | Fakes | Precision | Recall | F2 | Fake rejection | Fakes kept |
+**On the tracks of independent RelVal events** (validation events: 5,000 pre3 D128 ZMM + BsToMuMu events and 2,500 TTbar events at 200 PU per chain, L1 tracker muons re-emulated, tracks with MC truth; `features_validation/results/relval_model_comparison_*.json`). Fakes per event before and after the selector and fraction of muons kept, each model at its own working points, in the two samples (ZMM+BsToMuMu / TTbar):
+
+| Selector | Input fakes / event | Fakes kept / event, v1 | dev6 | dev5 | Fake rejection, v1 | Muons kept, v1 | dev6 | dev5 |
+|---|---|---|---|---|---|---|---|---|
+| IO pixel | 2.69 / 2.79 | 0.26 / 0.30 | 0.27 / 0.31 | 1.30 / 1.42 | 0.90 / 0.89 | 0.991 / 0.987 | 0.989 / 0.986 | 0.997 / 0.998 |
+| IO seeds | 5.82 / 5.94 | 0.34 / 0.39 | 0.38 / 0.43 | 3.08 / 3.43 | 0.94 / 0.93 | 0.992 / 0.990 | 0.990 / 0.981 | 0.996 / 0.998 |
+| OI pixel | 2.11 / 2.21 | 0.130 / 0.165 | 0.164 / 0.193 | 0.100 / 0.124 | 0.94 / 0.93 | 0.994 / 0.989 | 0.994 / 0.989 | 0.984 / 0.949 |
+| OI general | 2.02 / 2.13 | 0.115 / 0.134 | 0.190 / 0.222 | 0.108 / 0.136 | 0.94 / 0.94 | 0.990 / 0.979 | 0.990 / 1.000 | 0.977 / 0.950 |
+
+(IO: muons of the signal event. OI: all muon tracks, on the OI tracks of the chain run with v1, which hold 487 / 175 muon tracks in the pixel chain and 397 / 141 in the seeds chain.)
+
+- **IO against dev5**: 5 (pixel) and 9 (seeds) times fewer fakes, for 0.4–1.1 points fewer muons.
+- **IO against dev6**: 4–10% fewer fakes and more muons. The difference is in the barrel: for |η| < 0.9, v1 keeps 0.993 / 0.995 (pixel) and 0.993 / 0.995 (seeds) of the signal-event muons, dev6 0.984 / 0.990 and 0.986 / 0.976. At equal recall the two generations keep the same fakes within the noise of a retraining (Hyperparameters).
+- **Per pT bin** (signal-event muons kept by the IO selectors on ZMM+BsToMuMu, five bins up to 200 GeV): 0.978 / 0.990 / 0.995 / 0.993 / 0.992 (pixel) and 0.977 / 0.984 / 0.995 / 0.996 / 0.998 (seeds).
+- **Non-isolated muons**: on TTbar the IO selectors keep 0.982 / 1.000 / 0.986 (pixel) and 0.973 / 1.000 / 0.986 (seeds) of the signal-event muons in the three bins between 3 and 50 GeV. The shortfall is outside the barrel: for |η| > 1.2 they keep 0.981 (pixel) and 0.982 (seeds), and the pixel selector 0.975 for 0.9 < |η| < 1.2, against 0.995 in the barrel. The pinning events are almost all ZMM and BsToMuMu.
+- **Above 200 GeV, pixel chain**: in the 22,000 RelVal events (validation and pinning together) 23 signal-event muon tracks have a reconstructed pT above 200 GeV. For 19 of them the pixel-track pT is off by more than 30%, and v1 keeps 14 of those (dev6 18): the five lost are endcap tracks (|η| 1.8–2.2) of muons with a true pT of 38–69 GeV. The 4 well-measured ones are kept, and a single fake track sits in that bin. The threshold there (0.9998) is set on gun muons, whose reconstructed pT is mostly right; the seeds chain keeps 7 of 7.
+- **OI**: on ZMM+BsToMuMu v1 keeps 20–40% fewer fakes than dev6 for the same muons (on TTbar, OI general keeps 138 of 141 muon tracks where dev6 keeps all), and more muons than dev5, whose low-pT target was 96% instead of 98%, for up to 30% more fakes. The OI forests of v1 were trained on n-tuples made with the dev6 IO selectors upstream; the OI tracks of the chain are the same with either (2.11 / 2.21 and 2.02 / 2.13 input fakes per event with v1, 2.10 / 2.19 and 1.99 / 2.09 with dev6).
+
+**On the L3 muons at the end of the chain** (the same validation events through the full HLT chain, `features_validation/count_l3_muons.py`, `features_validation/results/l3_muons_v1.json`): fake L3 muons per event and efficiency for the generated muons of the signal event after the muon identification, without any high-purity selection, with dev5, with dev6 and with v1. The efficiency counts every generated muon with pT > 2 GeV and |η| < 2.4, including those too soft to reach the muon stations or to have an L1 tracker muon: with v1 on ZMM+BsToMuMu it is 0.75 for |η| < 0.9 and 0.93–0.94 for |η| > 1.2.
+
+| Chain, sample | Selection | Fake L3 muons / event | Efficiency |
+|---|---|---|---|
+| Pixel chain, ZMM+BsToMuMu | none / dev5 / dev6 / **v1** | 1.01 / 0.60 / 0.24 / **0.22** | 0.819 / 0.822 / 0.827 / **0.828** |
+| Pixel chain, TTbar | none / dev5 / dev6 / **v1** | 1.03 / 0.65 / 0.29 / **0.28** | 0.840 / 0.846 / 0.852 / **0.855** |
+| Seeds chain, ZMM+BsToMuMu | none / dev5 / dev6 / **v1** | 1.28 / 0.85 / 0.28 / **0.25** | 0.830 / 0.831 / 0.837 / **0.839** |
+| Seeds chain, TTbar | none / dev5 / dev6 / **v1** | 1.28 / 0.90 / 0.33 / **0.30** | 0.859 / 0.866 / 0.868 / **0.870** |
+
+With v1 the chain delivers about 4–5 times fewer fake muons than without a high-purity selection (2.3–3.4 times fewer than with dev5, 2–10% fewer than with dev6) and about one point more efficiency: a fake track can take the segments of a genuine muon in the arbitration of the muon identification, and it stops the standalone muon it is matched to from being passed to the outside-in step (with v1 five to six times more outside-in tracks are built per event than without a selection: 2.2 against 0.4 in the pixel chain on ZMM+BsToMuMu). The reduction of the fakes is smaller at the end of the chain than on the tracks because the muon identification, like the IO selectors, asks for compatible segments: it removes half of the fake muons made from IO tracks when there is no selection and a tenth of those v1 keeps. Of the fake muons left with v1 on ZMM+BsToMuMu, 0.19 (pixel chain) and 0.22 (seeds chain) per event come from IO tracks and 0.03 from OI tracks.
+
+**On the test split of the training samples** (`production/results/summary_v1.json`):
+
+| Model | Features | Trees | Nodes | .bin [MB] | ROC-AUC | PR-AUC | Precision | Recall | Fake rejection |
 |---|---|---|---|---|---|---|---|---|---|
-| IO pixel | 0–2 | 0.107 | 4,597 | 136,378 | 0.8718 | 0.9215 | 0.9111 | 0.9954 | 623 |
-| IO pixel | 2–5 | 0.213 | 309,523 | 1,594,114 | 0.9471 | 0.9879 | 0.9794 | 0.9893 | 17,088 |
-| IO pixel | 5–10 | 0.502 | 256,340 | 34,239 | 0.9960 | 0.9995 | 0.9988 | 0.9700 | 1,028 |
-| IO pixel | 10–50 | 0.544 | 114,254 | 1,326 | 0.9993 | 1.0000 | 0.9998 | 0.9382 | 82 |
-| IO pixel | 50–200 | 0.863 | 145,634 | 164 | 1.0000 | 1.0000 | 1.0000 | 0.9695 | 5 |
-| IO pixel | > 200 | 0.213 (global) | 214,517 | 1 | 1.0000 | 1.0000 | 1.0000 | 0 | 1 |
-| IO seeds | 0–2 | 0.036 | 4,379 | 1,397,119 | 0.8960 | 0.7787 | 0.7996 | 0.9997 | 396 |
-| IO seeds | 2–5 | 0.166 | 288,598 | 3,228,099 | 0.9418 | 0.9807 | 0.9727 | 0.9946 | 17,496 |
-| IO seeds | 5–10 | 0.347 | 261,967 | 82,737 | 0.9923 | 0.9984 | 0.9972 | 0.9756 | 2,021 |
-| IO seeds | 10–50 | 0.471 | 112,626 | 6,346 | 0.9972 | 0.9990 | 0.9986 | 0.9504 | 315 |
-| IO seeds | 50–200 | 0.560 | 143,095 | 579 | 0.9993 | 0.9998 | 0.9997 | 0.8152 | 107 |
-| IO seeds | > 200 | 0.856 | 209,597 | 115 | 0.9999 | 1.0000 | 1.0000 | 0.8870 | 13 |
-| OI pixel | 0–2 | 0.101 | 5,059 | 425,161 | 0.9299 | 0.9854 | 0.9737 | 0.9991 | 376 |
-| OI pixel | 2–5 | 0.274 | 21,343 | 656,104 | 0.9632 | 0.9864 | 0.9816 | 0.9988 | 805 |
-| OI pixel | 5–10 | 0.277 | 8,820 | 207,041 | 0.9665 | 0.9817 | 0.9787 | 0.9986 | 300 |
-| OI pixel | 10–50 | 0.334 | 4,991 | 111,384 | 0.9725 | 0.9864 | 0.9836 | 0.9988 | 139 |
-| OI pixel | 50–200 | 0.344 | 6,297 | 18,471 | 0.9832 | 0.9943 | 0.9920 | 0.9942 | 107 |
-| OI pixel | > 200 | 0.504 | 14,046 | 6,269 | 0.9955 | 0.9979 | 0.9974 | 0.9898 | 64 |
-| OI general | 0–2 | 0.477 | 5,793 | 482,514 | 0.9456 | 0.9786 | 0.9718 | 0.9993 | 326 |
-| OI general | 2–5 | 0.462 | 42,782 | 806,050 | 0.9653 | 0.9890 | 0.9842 | 0.9981 | 1,520 |
-| OI general | 5–10 | 0.323 | 27,976 | 245,318 | 0.9765 | 0.9934 | 0.9899 | 0.9973 | 668 |
-| OI general | 10–50 | 0.647 | 15,438 | 136,727 | 0.9923 | 0.9918 | 0.9919 | 0.9991 | 119 |
-| OI general | 50–200 | 0.657 | 21,644 | 26,634 | 0.9928 | 0.9952 | 0.9947 | 0.9941 | 156 |
-| OI general | > 200 | 0.569 | 60,905 | 9,597 | 0.9961 | 0.9990 | 0.9984 | 0.9751 | 239 |
+| IO pixel | 46 | 1100 | 278,238 | 3.6 | 0.99498 | 0.99020 | 0.8781 | 0.9901 | 0.9287 |
+| IO seeds | 46 | 400 | 552,616 | 7.2 | 0.99764 | 0.99211 | 0.8621 | 0.9889 | 0.9585 |
+| OI pixel | 22 | 200 | 5,958 | 0.08 | 0.99151 | 0.86929 | 0.3433 | 0.9856 | 0.9200 |
+| OI general | 22 | 200 | 5,938 | 0.08 | 0.99254 | 0.88157 | 0.3591 | 0.9840 | 0.9280 |
 
-The IO fakes concentrate at 2–5 GeV (5–11 fakes per muon track at the input, > 85% of the fakes kept); above 10 GeV the IO inputs are almost pure (≤ 0.06 fakes per muon track) and the working points keep essentially every muon. The IO pixel > 200 GeV bin has no fake in the validation split and uses the global F2 threshold (0.213). The IO seeds < 2 GeV bin (0.3% of its tracks are muons) sits at recall 0.78 / fake rejection 0.9997: there the fakes rise steeply with the recall (test split: 396 fakes kept at the deployed point, 1.4k at recall 0.80, 14k at 0.85, 52k at 0.90), so the F2 optimum gives up a fifth of these muons.
+Per working-point bin (test split; for IO the recall of the signal-event muons, on which the targets are defined):
 
-## Forest training pipeline (v3, `production/forest_pipeline.py`)
+| Model | pT bin [GeV] | Threshold | Tracks | Muons | Recall | Fake rejection |
+|---|---|---|---|---|---|---|
+| IO pixel | [0, 3) / [3, 5) / [5, 10) | 0.261 / 0.586 / 0.938 | 850,856 / 322,031 / 146,682 | 54,791 / 118,145 / 124,170 | 0.957 / 0.993 / 0.998 | 0.936 / 0.898 / 0.953 |
+| IO pixel | [10, 50) / [50, 200) / ≥ 200 | 0.9990 / 0.9998 / 0.9998 | 57,623 / 72,507 / 105,061 | 56,620 / 72,466 / 105,002 | 0.991 / 0.995 / 0.996 | 0.993 / 0.878 / 0.983 |
+| IO seeds | [0, 3) / [3, 5) / [5, 10) | 0.089 / 0.461 / 0.928 | 1,800,804 / 496,443 / 169,804 | 73,321 / 123,050 / 129,955 | 0.958 / 0.990 / 0.997 | 0.959 / 0.955 / 0.963 |
+| IO seeds | [10, 50) / [50, 200) / ≥ 200 | 0.9982 / 0.9987 / 0.9995 | 60,092 / 72,125 / 108,701 | 56,402 / 71,688 / 108,654 | 0.991 / 0.995 / 0.995 | 0.998 / 0.998 / 0.957 |
+| OI pixel | [0, 3) / [3, 5) / [5, 10) | 0.056 / 0.045 / 0.027 | 500,787 / 203,595 / 129,901 | 9,200 / 6,852 / 6,479 | 0.976 / 0.972 / 0.995 | 0.916 / 0.920 / 0.907 |
+| OI pixel | [10, 50) / [50, 200) / ≥ 200 | 0.053 / 0.108 / 0.658 | 73,118 / 15,782 / 12,637 | 3,375 / 3,792 / 8,376 | 0.988 / 0.995 / 0.995 | 0.964 / 0.960 / 0.980 |
+| OI general | [0, 3) / [3, 5) / [5, 10) | 0.064 / 0.032 / 0.071 | 488,426 / 194,087 / 123,148 | 8,461 / 5,431 / 5,259 | 0.965 / 0.977 / 0.989 | 0.923 / 0.909 / 0.958 |
+| OI general | [10, 50) / [50, 200) / ≥ 200 | 0.032 / 0.138 / 0.815 | 71,443 / 15,444 / 15,364 | 2,614 / 2,950 / 11,028 | 0.994 / 0.997 / 0.994 | 0.951 / 0.971 / 0.988 |
 
-- **Data** (v3: pixel-chain n-tuples produced in May 2026, seeds-chain n-tuples in April–May 2026): 24 ROOT files per HLT chain (~222 GB, 20 particle-gun samples covering the HLT pT spectrum + 4 Bs→μμ samples, Phase-2 pileup). Signal = track matched to a muon TrackingParticle by the validation associator; background = unmatched ("fake") tracks. ~9.8M (pixel), ~20.4M (seeds), ~5.4M / ~6.9M (OI) tracks.
-- **Feature cache**: content-addressed (`--cache-dir`, default `/tmp/$USER/muonhp_feature_cache`): the key covers the extraction code (source of `build_dataset` and every function/constant it uses), the branch list, the input-file manifest (path, size, mtime) and the numpy/awkward/uproot versions, so a stale cache is never used. A job stops if the feature code changes on disk while it runs: the key is computed from the source files, which then no longer describe the running code.
+The IO thresholds below 50 GeV are those pinned on RelVal muons, so the recall of the gun and Bs muons of the test split differs from the targets there (0.957 below 3 GeV): the two muon populations are not distributed alike, which is why the thresholds are pinned. The OI thresholds come from the validation split, and on the test split the OI recall is 1–2 points under the targets below 5 GeV (0.976 / 0.972 for OI pixel, 0.965 / 0.977 for OI general against 0.98 / 0.99); on the RelVal tracks of those bins it is 0.94–1.00, with few muons. For the IO selectors the fake rejection of the test split is two to four points above that on RelVal events.
+
+## Validation in CMSSW (v1)
+
+The deployed selectors in a CMSSW_20_1_0_pre3 area with the `L1Trigger/Phase2L1GMT` workaround, on the validation RelVal events (L1 tracker muons re-emulated + HLT + training NANO, 2,500 pre3 D128 events at 200 PU per sample and chain; `features_validation/results/parity_v1_*.json`, `l3_muons_v1.json`).
+
+**CMSSW vs training code.** For the four selectors the features computed in CMSSW are bit-identical to the training extraction on the same events and no selection decision differs (83,532 IO and 32,703 OI tracks of the six jobs; scores agree to 1.8e-7). 12 further NANO tracks had no dump line in the job logs and are not compared.
+
+**Cost.** Time per event of the selector modules (TimeReport, 8-thread jobs), ZMM / BsToMuMu / TTbar:
+
+| Selector | v1 [ms / event] | dev6 [ms / event] | dev5 [ms / event] |
+|---|---|---|---|
+| IO pixel (v1: 1100 trees, depth 8) | 1.20 / 1.25 / 1.09 | 1.55 / 1.60 / 1.44 | 0.22 / 0.22 / 0.18 |
+| IO seeds (v1: 400 trees, depth 12) | 1.39 / 1.52 / 1.28 | 2.11 / 2.25 / 1.90 | 0.32 / 0.34 / 0.29 |
+| OI, pixel chain (v1: 200 trees, depth 4) | 0.023 / 0.025 / 0.022 | 0.051 / 0.058 / 0.054 | 0.031 / 0.036 / 0.033 |
+| OI, seeds chain (v1: 200 trees, depth 4) | 0.022 / 0.024 / 0.022 | 0.092 / 0.103 / 0.097 | 0.021 / 0.022 / 0.022 |
+
+(`features_validation/results/timing_v1.json`.) The three generations did not run at the same time: the node was shared with 6 to 12 other jobs and trainings and its load differed (the full event took 3.3–3.8 s in the v1 jobs, 4.2–4.7 s in the dev6 jobs, 3.5–4.0 s in the dev5 jobs), so compare the columns loosely. dev6 has 1300 (IO pixel), 600 (IO seeds), 700 and 1600 (OI) trees.
+
+The IO selectors spend about 0.5 ms per event collecting the segments and rec-hits of the muon detectors in global coordinates and matching them to the tracks (measured with a 100-tree forest); the rest is the forest.
+
+**Muons kept along the chain** (`input_selectors/results/*_chain_v1.json`; TrackingParticle muons with pT > 2 GeV, |η| < 2.4, reconstructed in the selector input and having their own L1TkMuon: 3,870 / 3,710 / 1,588 in the pixel chain for ZMM / BsToMuMu / TTbar; in parentheses 2–5 GeV; fakes per event after the step):
+
+| | ZMM | BsToMuMu | TTbar | Fakes / event (ZMM, BsToMuMu, TTbar) |
+|---|---|---|---|---|
+| Pixel-track selector | 1.000 | 0.998 (0.997) | 0.989 (0.995) | 2.64, 2.73, 2.79 |
+| + IO pixel forest | 0.992 (0.955) | 0.983 (0.980) | 0.976 (0.974) | 0.24, 0.27, 0.30 |
+| Seed selector → IO tracks | 0.999 (0.995) | 0.996 (0.995) | 0.993 (0.987) | 5.37, 6.26, 5.94 |
+| + IO seeds forest | 0.995 (0.959) | 0.983 (0.978) | 0.981 (0.962) | 0.32, 0.37, 0.39 |
+
+These fractions are per muon and do not include what the outside-in step recovers (the L3 muon table above does). The ZMM 2–5 GeV muons are few and mostly non-prompt. On TTbar the pixel-track selector loses 18 of 1,588 muons with one track per L1TkMuon (`nTracksToKeep = 1`, the value in the cfi and in every number of this document); with two it loses one. Applying the v1 forest to the two-track input of the same events (the selector emulated on the stored tracks, not a new run of the chain) gives 0.992 / 0.984 / 0.987 of the muons kept (ZMM / BsToMuMu / TTbar, against 0.992 / 0.983 / 0.976) and 0.28 / 0.33 / 0.37 fakes per event after the forest (against 0.24 / 0.27 / 0.30). The L3 muons after the identification have not been counted with two tracks.
+
+
+## Forest training pipeline (`production/forest_pipeline.py`)
+
+- **Data** (v1): 28 ROOT files per HLT chain (113 GB for the pixel chain, 120 GB for the seeds chain; 20 particle-gun files covering the HLT pT spectrum + 8 Bs→μμ files, 1.28M events, D128 geometry, 200 pileup mixed from a 900k-event MinBias pool), produced with the HLT configuration of the deployment, with the tables of the muon local reconstruction. Signal = track matched to a muon TrackingParticle by the validation associator; background = unmatched ("fake") tracks. 5.1M (IO pixel), 9.1M (IO seeds), 3.1M / 3.0M (OI pixel / general) tracks. The muon HLT starts from the L1 tracker muons, and the L1 emulation of CMSSW_20_1_0_pre3 finds one for only about 30% of the muons with |η| < 0.8 ([cms-sw/cmssw#52096](https://github.com/cms-sw/cmssw/issues/52096)): the barrel stubs handed to the track-plus-stub matching of `L1Trigger/Phase2L1GMT` carry z and a slope in the fields the matching reads as pseudorapidity. The v1 samples were produced with a workaround (those stubs built as in CMSSW_20_0_0_patch1): an L1 tracker muon is within ΔR < 0.1 of 96–98% of the gun muons above 5 GeV for |η| < 0.8 and of 95–97% at higher |η| (31–34% and 79–96% in a production without the workaround, on which dev6 was trained). Measure this fraction per |η| region before using a sample; RelVal files made with that release store the deficient L1 tracker muons (step 7 of the instructions).
+- **Feature cache**: content-addressed (`--cache-dir`, default `/tmp/$USER/muonhp_feature_cache`): the key covers the extraction code (source of `build_dataset` and every function/constant it uses), its arguments, the branch list, the input-file manifest (path, size, mtime) and the numpy/awkward/uproot versions, so a stale cache is never used. A job stops if the feature code changes on disk while it runs: the key is computed from the source files, which then no longer describe the running code. The extraction runs one process per input file (`feature_workers`).
 - **Feature ABI**: the kept features are asserted name by name against the order of the CMSSW extractors (`io_production_features()`, `OI_PRODUCTION_FEATURES` = `toArray()` of `muonhp::IOTrackFeatures` / `muonhp::OITrackFeatures`); a dropped feature that does not exist is an error.
-- **Split — evt10**: `ev % 10` → train 60% / val 10% / test 30%, event-level (no same-event leakage), same composition per sample.
-- **Weights**: signal ×5, kinematic 1/pT weight capped at 20 (normalised per class).
-- **Trees**: histogram XGBoost, subsample/colsample 0.8, **IO: depth 12, η = 0.2; OI: depth 10, η = 0.1** (validation scan below), 5000-tree budget, no early stopping. The quantile cuts are computed on the host (`QuantileDMatrix`), then trees are grown on the GPU: the GPU sketch of weighted data is not reproducible across processes (the v2 models cannot be re-created), the host sketch is — a re-run reproduces every output bit for bit (checked across processes and GPUs).
-- **Size selection**: smallest tree prefix whose validation F2 (at validation-chosen per-bin working points) is within 0.001 of the best prefix. v3 keeps 800 / 1250 / 300 / 200 trees (IO pixel / IO seeds / OI pixel / OI general).
-- **Working points**: one F2-optimal threshold per pT bin (`[0,2,5,10,50,200]` GeV), validation only; bins with < 100 signal tracks or no background fall back to the global F2 point (IO pixel > 200 GeV: no fakes in the validation split). The test split is evaluated once.
-- **Exports and verification**: `model.json`; `model_compact.bin` (CMSSW), replayed with a numpy re-implementation of the CMSSW traversal on 300k random test tracks plus every test track within 0.02 of its working point (asserts |Δscore| < 1e-5 and **0 working-point decision flips**; the exporter also refuses models whose nodes send missing values left, which the NaN → right traversal could not reproduce); `model_xgb.onnx`, replayed through ONNX Runtime on 100k test tracks (+ single-thread latency).
-- **Records**: `train.log`, `thresholds.json` (working points, test metrics, size curve, feature ABI, .bin md5), `manifest.json` (git commit and dirty flag, package versions, GPU, input files, cache key, verification results, output checksums), `cmssw_cfi_snippet.py`. `thresholds.json`, `manifest.json` and `train.log` are version-controlled.
-- **Logs**: warnings are shown once and must not occur (`check_consistency.py` fails on any warning/error line). ONNX Runtime sessions use explicit thread pools: the default pool pinned threads to all 192 physical cores and failed inside the job's 94-CPU cpuset, printing 144 `pthread_setaffinity_np failed` errors per session in the v2 logs. The DNN trainers pin the TorchScript ONNX exporter (opset 13, `dynamo=False`; torch ≥ 2.9 switches the default) and verify every export with ONNX Runtime.
+- **Split — copy-aware**: the pileup is mixed from a finite MinBias pool, so the same pileup track recurs in many events (0.5% / 0.6% of the IO pixel / seeds tracks are bit-identical copies of another track, many more are near-copies: every pileup event is used about 290 times). Exact copies are removed (`dedup_copies`), and tracks are grouped by three quantities rounded to 0.01 (`copy_group_features`: log₁₀ pT, |η| and log₁₀ of the dz uncertainty for IO; log₁₀ pT, η and pixel hits for OI); whole groups go to train 60% / val 10% / test 30% (`split_mode="copygroup"`), so a recurring track never sits in both training and test. An event-level split (`split_mode="evt10"`, also available) is not independent when tracks recur: forests memorise them and the test metrics overestimate the performance. Each training prints the fraction of copies.
+- **Weights**: signal ×5 (normalised per class); no kinematic 1/pT weighting.
+- **Trees**: histogram XGBoost, η = 0.1, subsample/colsample 0.8, no early stopping. IO: **depth 8** (pixel, 1500-tree budget) and **depth 12** (seeds, 400-tree budget; Hyperparameters), `min_child_weight` 5 (`io_xgb_common.RECIPE`). OI: depth 4, 2000-tree budget, Gaussian jitter of 0.3 σ on the continuous training features (`train_jitter`, against memorising recurring tracks). The quantile cuts are computed on the host (`QuantileDMatrix`), then trees are grown on the GPU or the CPU; the thread count is that of the CPUs the process may use (cpuset and container quota; `nthread`).
+- **Size selection**: smallest tree prefix whose validation fake rejection at the validation-chosen working points is within a tolerance of the best prefix (`prune_tol`: 0.002 for IO, 0.005 for OI). v1 keeps 1100 / 400 / 200 / 200 trees (IO pixel / IO seeds / OI pixel / OI general); for IO seeds this is the whole budget, set where independent events stop improving.
+- **Working points**: one threshold per pT bin (`[0,3,5,10,50,200]` GeV) keeping a fixed fraction of the muons of the bin (`wp_mode="recall"`, `wp_recall_targets`; 1.0 = open threshold). The fraction is defined on the validation muons of the bin: for IO, those of the signal event (`wp_signal_feature`: tracks of a generator-level muon; the pileup muons of the samples are signal for the training but not for the targets); bins with < 100 such muons use the global threshold (99% of all muons). With `--wp-files` the threshold of a bin is instead the same quantile of the muons of independent events (`wp_pinning` in `thresholds.json`), for the bins those events populate: at least 10 reference muons below the threshold (`wp_files_min_rejected`), since the precision of a quantile is set by the number of muons beyond it. The other bins keep the validation threshold. F2-optimal points remain available (`wp_mode="f2"`). The test split is evaluated once, at the final working points.
+- **Exports and verification**: `model.json`; `model_compact.bin` (CMSSW), replayed with a numpy re-implementation of the CMSSW traversal on 300k random test tracks plus every test track within 0.02 of its working point (asserts |Δscore| < 1e-5 and **0 working-point decision flips**; the exporter also refuses models whose split nodes send missing values left, which the NaN → right traversal could not reproduce); `model_xgb.onnx`, replayed through ONNX Runtime on 100k test tracks (+ single-thread latency).
+- **Records**: `train.log`, `thresholds.json` (working points and their pinning, test metrics, size curve, feature ABI, .bin md5), `manifest.json` (git commit and dirty flag, package versions, device, input files, cache key, verification results, output checksums), `cmssw_cfi_snippet.py`. `thresholds.json`, `manifest.json` and `train.log` are version-controlled.
+- **Logs**: warnings are shown once and must not occur (`check_consistency.py` fails on any warning/error line). ONNX Runtime sessions use explicit thread pools sized to the CPUs the process may use. The DNN trainers pin the TorchScript ONNX exporter (opset 13, `dynamo=False`; torch ≥ 2.9 switches the default) and verify every export with ONNX Runtime.
 
 ### Feature sets
 
-- **IO, 33 features** (`io_production_features(prefix)`, same list for the pixel and seeds chains, CMSSW `muonhp::IOTrackFeatures`): 18 track features (`p`, `pt`, `etaErr`, `phiErr`, `dzErr`, `qoverpErr`, `lambdaErr`, `nPixelHits`, `nTrkLays`, `nFoundHits`, `impact3D`, `sigmaPtOverPt`, `sip2D`, `sipZ`, `dxyOverPt`, `ptErrOverP`, `dzOverDxy`, `absEta`; momenta, errors and impact parameters log-compressed), 14 L1TkMuon features (stub counts `L1TkMu_nStubs`/`_Endcap`/`_Barrel`, `stubQual_max`, the η/φ/depth region of the best stub, and the track-to-L1TkMuon matching `hasMatch`, `dR2min`, `dPtNorm`, `chi2Pt`, `matchingScore`, `nCompatible`, `secondBest_dR2`) and the soft low-pT indicator `is_low_pt` (logistic in pT around 5 GeV). Dropped from 44: zero gain (`nLostHits`, `hitEfficiency`), near-zero gain (`normalizedChi2`, `chi2PerHit`, `chi2`, `impactSignificance`, `dxyErr`, `dszErr`), redundant (`eta` with `absEta`; `ptErr`, `relUncertaintyProduct` with `qoverpErr`).
-- **OI, 22 features** (`OI_PRODUCTION_FEATURES`, `muonhp::OITrackFeatures`): 19 track features (`p`, `pt`, `normalizedChi2`, `etaErr`, `phiErr`, `dszErr`, `dxyErr`, `dzErr`, `qoverpErr`, `lambdaErr`, `eta`, `nPixelHits`, `nTrkLays`, `nFoundHits`, `nLostHits`, `impact3D`, `impactSignificance`, `chi2PerHit`, `hitEfficiency`), the L2 standalone-muon matching (`l2_mu_vtx_hasMatch`, `l2_mu_vtx_matchingScore`) and `is_low_pt`. Dropped from 26: `ptErr`, `sigmaPtOverPt`, `relUncertaintyProduct` (pT-uncertainty information of `qoverpErr`), `chi2` (with `normalizedChi2`/`chi2PerHit`).
-- **What the v3 forests use** (gain, `feature_importance.txt` of each model): the IO selectors are driven by the L1TkMuon muon-station stubs (`L1TkMu_nStubs` and `L1TkMu_nStubs_Endcap` rank first and second on both chains, with 4.6–11x the gain of the third feature), followed by `is_low_pt`, the track pT, the best stub quality and the L1TkMuon ambiguity (`nCompatible`, `secondBest_dR2`); the OI selectors by the hit pattern (`nTrkLays`, `hitEfficiency`, `nPixelHits`: the OI general forest puts 8x more gain on `nPixelHits` than on any other feature) and the 3D impact parameter.
+- **IO, 46 features** (`io_production_features(prefix)`, same list for the pixel and seeds chains, CMSSW `muonhp::IOTrackFeatures`):
+  - 9 track quantities: `p`, `pt`, `dzErr`, `qoverpErr`, `etaErr`, `phiErr` (log-compressed), `sigmaPtOverPt` (relative pT uncertainty, log), `sip2D` (significance of the transverse impact parameter, log), `absEta`;
+  - `L1TkMu_nStubs_Endcap`: the number of endcap muon stubs of the L1 tracker muon matched to the track (0 without a match);
+  - 36 quantities of the track-to-chamber matching (`chamber_match.py`). For a track of charge q, transverse momentum pT and direction (η, φ) at its closest approach to the beam line, and a segment or rec-hit of a muon station, **bend** = q · Δφ(position) · pT [rad GeV] is the charge-signed azimuthal displacement of the object from the track direction, scaled by pT so that it is about the same at every momentum (negative on the side the charge bends to); **dEta** is its η minus the track's; **bendDiff**, for segments, is how much more the segment direction is bent than its position. The stations are ME0 (segments), the four DT/CSC stations (segments), GE1/1 and GE2/1 (rec-hits; the HLT builds no segments there) and the four RPC stations (rec-hits). The candidates of a station are the objects in a wide window (|dEta| < 0.3, bend on the charge side and below 8 rad GeV in size, rec-hits within one bunch crossing) whose direction, for segments, is also bent on the charge side; they are ordered by |dEta|, the coordinate the field does not bend. The features are `cm_bend_<station>` and `cm_dEta_<station>` of the nearest candidate in each of the 11 stations (22), `cm_bendDiff_<station>` for the 5 segment stations (5), and the second candidate where the nearest one is most often not the muon's own: `cm_bend2_`, `cm_dEta2_` in ME0, station 1, GE1/1 and GE2/1 (8; in the GEM stations it is mostly the muon's hit in the other layer) and `cm_bendDiff2_St1` (1). A station without a candidate has values outside the range of any candidate (9 for a bend, 0.5 for dEta).
 
-### Hyperparameter scan (validation only, `production/tuning/`)
+  Where a muon's own segments lie in these quantities depends on the station and on |η|: the forest learns it from the raw values. Nothing is tabulated or fitted, and no second model scores the matches.
+- **OI, 22 features** (`OI_PRODUCTION_FEATURES`, `muonhp::OITrackFeatures`): 19 track features (`p`, `pt`, `normalizedChi2`, `etaErr`, `phiErr`, `dszErr`, `dxyErr`, `dzErr`, `qoverpErr`, `lambdaErr`, `eta`, `nPixelHits`, `nTrkLays`, `nFoundHits`, `nLostHits`, `impact3D`, `impactSignificance`, `chi2PerHit`, `hitEfficiency`), the L2 standalone-muon matching (`l2_mu_vtx_hasMatch`, `l2_mu_vtx_matchingScore`) and `is_low_pt` (logistic in pT around 5 GeV). Dropped from 26: `ptErr`, `sigmaPtOverPt`, `relUncertaintyProduct` (pT-uncertainty information of `qoverpErr`), `chi2` (with `normalizedChi2`/`chi2PerHit`).
+- **How the IO list was chosen.** `build_dataset()` computes 44 track and L1TkMuon quantities and, for every station, the two nearest candidates (54 quantities). The 9 track quantities and the single L1 one are those whose thresholds, set on the gun and Bs muons of the training sample, give the target recall on independent RelVal muons (with the full track list the recall on RelVal fell from 99% to 96–98%). The chamber quantities were built by structure and checked against alternatives on independent events: second candidates beyond those listed add nothing measurable, and lists pruned by importance keep more fakes (Hyperparameters).
+- **What the v1 forests use** (gain, `feature_importance.txt` of each model): the IO selectors by pT and the L1 stub count first, then the bends and η differences of the stations (the outer RPC station, ME0, stations 2 and 3, GE2/1, the second RPC station), the curvature and η uncertainties and |η|; the OI selectors by the hit pattern (`nTrkLays`, `nPixelHits`, found hits, `hitEfficiency`), the 3D impact parameter and `is_low_pt`.
 
-Each configuration is trained on the non-test folds except the validation fold and scored by the production criterion (validation F2 at validation-chosen per-bin working points) for every tree prefix, together with the CMSSW inference cost of that prefix, so that configurations are compared at **equal inference cost**. 18 configurations per flavour (depth 6–14, learning rate 0.05–0.2, `min_child_weight`, L2, `colsample`, 512 bins, signal boost, kinematic weights); the chosen configurations were confirmed on a second validation fold (fold 9). Validation F2 within an inference budget:
+### Hyperparameters
 
-| Flavour | Configuration | F2 @ ≤ 5k visits | F2 @ ≤ 15k visits | Chosen size (trees / visits / val F2) | Fold 9 (chosen size) |
-|---|---|---|---|---|---|
-| IO pixel | v2 config (depth 6, η 0.1) | 0.98732 | 0.98982 | 3150 / 18,881 / 0.99032 | 0.98934 |
-| IO pixel | **v3 (depth 12, η 0.2)** | 0.99219 | 0.99347 | 800 / 9,268 / 0.99304 | 0.99218 |
-| IO seeds | v2 config (depth 6, η 0.1) | 0.97652 | 0.98111 | 4000 / 23,982 / 0.98303 | 0.98200 |
-| IO seeds | **v3 (depth 12, η 0.2)** | 0.98748 | 0.99061 | 1250 / 14,684 / 0.99061 | 0.99006 |
-| OI pixel | v2 config (depth 6, η 0.1) | 0.98570 | 0.98683 | 1050 / 6,150 / 0.98611 | 0.98424 |
-| OI pixel | **v3 (depth 10, η 0.1)** | 0.98712 | 0.98724 | 300 / 2,521 / 0.98646 | 0.98462 |
-| OI general | v2 config (depth 6, η 0.1) | 0.99123 | 0.99214 | 850 / 5,026 / 0.99135 | 0.99066 |
-| OI general | **v3 (depth 10, η 0.1)** | 0.99226 | 0.99236 | 200 / 1,704 / 0.99149 | 0.99079 |
+The IO forests have to learn, from raw quantities, where the candidates of a muon lie in each station. Depth, forest size and feature list were scanned on the v1 samples with the pipeline's own training split and weights, and judged on the validation RelVal events at equal recall: per-pT-bin thresholds that keep 98 / 99 / 99.5% of the signal-event muons of all validation events, so that every variant is compared at the same muon efficiency. Fakes kept per event, ZMM+BsToMuMu / TTbar, 46 features:
 
-Depth is the dominant factor (the depth-6 forests were under-fitted within their budget: their validation F2 still rose at 5000 trees); lower learning rates, `min_child_weight`, L2 and `colsample` changes do not help; 512 bins and removing the signal boost change F2 by ≤ 0.0003 (noise level). For the OI selectors all configurations agree within ±0.0005 (their validation samples hold ~20k/60k signal tracks); depth 10 is marginally but consistently ahead of depth 6 on both folds at a third of the cost (depth 12 / η 0.2 collapses to ~100 trees for no gain). Full tables: `production/results/tuning_summary.md`.
+| Chain | Depth | 400 trees | 1000 trees | 1500 trees |
+|---|---|---|---|---|
+| IO pixel | 6 | 0.261 / 0.293 | 0.260 / 0.294 | 0.259 / 0.296 |
+| IO pixel | **8** | 0.264 / 0.308 | 0.265 / 0.308 | 0.262 / 0.304 |
+| IO pixel | 10 | 0.256 / 0.299 | 0.274 / 0.319 | 0.278 / 0.319 |
+| IO pixel | 12 | 0.257 / 0.301 | 0.249 / 0.290 | 0.249 / 0.290 |
+| IO seeds | 8 | 0.440 / 0.485 | 0.416 / 0.458 | |
+| IO seeds | 10 | 0.389 / 0.440 | 0.425 / 0.482 | |
+| IO seeds | **12** | 0.378 / 0.424 | 0.486 / 0.519 | |
+| IO seeds | 12, another seed | 0.378 / 0.427 | 0.435 / 0.481 | |
+| IO seeds | 14 | 0.378 / 0.426 | 0.393 / 0.438 | |
+| IO seeds | 14, another seed | 0.439 / 0.492 | 0.521 / 0.564 | |
+
+- **Noise.** Three trainings that differ only by the random seed keep 0.264 / 0.282 / 0.245 fakes per event on ZMM+BsToMuMu (pixel, 800 trees) and 0.400 / 0.393 / 0.446 (seeds, 500 trees), about ±7%; the finite validation sample adds about 8% (pixel) and 15% (seeds) to one number (a handful of muons below 3 GeV set the threshold of the bin that holds most of the kept fakes). A difference below 10–15% between two rows is not significant.
+- **IO pixel**: depth and size make no significant difference between 400 and 1500 trees and between depths 6 and 12. Depth 8 with a 1500-tree budget is kept; the size selection keeps 1100 trees.
+- **IO seeds**: at 400 trees depths 10, 12 and 14 keep 0.38–0.39 fakes per event on ZMM+BsToMuMu (one of the two depth-14 trainings 0.44) and depth 8 keeps 0.44. Beyond 400 trees the depth-12 forests keep more fakes at equal recall on the RelVal events (13–29% more at 1000 trees, in the two seeds; depth 10 and one of the two depth-14 trainings do the same), while the fake rejection of the copy-aware validation and test splits keeps improving: with a 1000-tree budget the size selection keeps 900 trees, which give 0.467 / 0.509 fakes per event at equal recall against 0.378 / 0.424 for 400 trees. The evidence is moderate for one training and has the same sign in all the deep ones; the smaller forest is also faster. Depth 12 is kept, with a budget of 400 trees, which the size selection keeps entirely.
+- **Feature list** (pixel at 800 trees, seeds at 500, one training each): adding the second candidate of DT/CSC stations 2–4 and of RPC1 (54 features), using all 98 built quantities, or dropping the 3 or 6 least important of the 46, changes the fakes kept by less than the noise (ratios to the 46 between 0.96 and 1.09). Lists pruned by importance from the 98 (70 to 40 features) do better on the test split and keep about 10–40% more fakes on the RelVal events.
+
+η = 0.1, subsample and colsample 0.8, `min_child_weight` 5 throughout. The OI forests keep the depth-4 recipe of the pipeline defaults.
+
 
 ## Feature parity between training and CMSSW
 
-The training features are computed from the n-tuple branches (float32), the CMSSW features from `reco::Track`/`l1t::TrackerMuon` objects. Both now follow one **numeric convention**: every raw input rounded to float32 (as the n-tuple stores it), all arithmetic in float64 (including an exact `reco::deltaPhi` equivalent in Python), each feature rounded to float32 once (`pixel_features.as_float64`, `muonhp::asStored` in the C++ headers).
+The training features are computed from the n-tuple branches (float32), the CMSSW features from `reco::Track`/`l1t::TrackerMuon` objects and from the segments and rec-hits of the muon detectors. Both follow one **numeric convention**: every raw input rounded to float32 (as the n-tuple stores it), all arithmetic in float64 (including an exact `reco::deltaPhi` equivalent in Python), each feature rounded to float32 once (`pixel_features.as_float64`, `muonhp::asStored` in the C++ headers).
 
-**Bug found and fixed (v2 IO selectors, both chains)**: the imputed constants of the L1-matching features were evaluated in float64 in the training (`log10(1 + 1e-6)` = 4.342943e-07 for `L1TkMu_secondBest_dR2` when there is no second compatible L1TkMuon) and in float in CMSSW (`1.0f + 1e-6f` rounds: 4.141753e-07). The forest put a split exactly between the two values, used by 177 nodes of the deployed pixel model: every track without a second compatible L1TkMuon was scored on the wrong side of all of them in CMSSW. On 100 ZMM events, 11/402 (pixel) and 11/684 (seeds) IO selection decisions differed from the validated model, with score shifts up to 0.58. The OI selectors were not affected (raw-space imputation).
+For the chamber matching the inputs are the global η and φ of the segments and hits. The n-tuple tables evaluate them through the ROOT interpreter, which does not fuse x·x + y·y into a multiply-add as compiled code does; `muonhp::chamberPerp`/`chamberEta` (`MuonChamberMatch.h`) keep the two roundings, so the selector sees the values of the tables to the last bit. Candidates at the same |dEta| are taken in the order of the tables (detector, then collection order). The RPC rec-hit table stores the CMSSW global η and φ of the hits, in the training and in the validation n-tuples.
 
-**Validation on real events** (`production/features_validation/run_cmssw_validation.sh`: L1 + HLT + training NANO on 250 ZMM and 250 BsToMuMu RelVal events at 200 PU per chain, both chains; `validate_cmssw.py` joins the per-track C++ dump with the training extraction on the same events): for the four deployed selectors the CMSSW features are **bit-identical** to the training features (7,627 tracks, every value) and **0 selection decisions differ**; scores agree to ≤ 1.2e-7 (float summation order). Results: `production/features_validation/results/parity_v3_*.json`. The same check on the v2 deployment (before the fix, 100 ZMM events) found 11/402 (IO pixel) and 11/684 (IO seeds) differing decisions.
+The convention is checked on real events by `production/features_validation/validate_cmssw.py` (step 7 of the instructions), which joins a per-track dump of the CMSSW selectors with the training extraction on the same events and requires bit-identical features and no differing selection decision.
 
 ## CMSSW integration
 
-All four selectors live in `RecoMuon/L3TrackFinder` on the [`20_1_X_muonTracking` branch](https://github.com/Parsifal-2045/cmssw/tree/20_1_X_muonTracking) of the private Parsifal-2045/cmssw fork.
+All four selectors live in `RecoMuon/L3TrackFinder` on the [`20_1_X_muonTracking_v1` branch](https://github.com/Parsifal-2045/cmssw/tree/20_1_X_muonTracking_v1) of the private Parsifal-2045/cmssw fork, based on CMSSW_20_1_0_pre3. Its last commit holds only the model files, so that it can be dropped once cms-data serves them; the commit before it is the temporary `L1Trigger/Phase2L1GMT` workaround (step 7 of the instructions).
 
-- **Models**: `RecoMuon/L3TrackFinder/data/IO/muonHP_IO_{pixelPath,seedsPath}_forest_v3.bin` and `data/OI/muonHP_OI_{pixelPath,seedsPath}_forest_v3.bin` (family / HLT chain / version), described in `data/README.md` (selector, chain, input tracks, cfi module, trees, test performance, training commit, md5). No other model files remain in `data/`. For the upstream PR they belong in cms-data (`RecoMuon-L3TrackFinder`).
-- **Features**: `interface/IOTrackSelectorFeatures.h` (33, `muonhp::IOTrackFeatures`) and `interface/OITrackSelectorFeatures.h` (22, `muonhp::OITrackFeatures`), float64 convention above.
-- **Inference**: `interface/CompactForest.h` (shared by both plugins): loads the `.bin` once per process (`GlobalCache`), re-lays it out for cache locality and validates it against the extractor (feature indices inside the feature vector, children after parents, exact file size) — loading a model trained on another feature set now fails with a clear error instead of reading out of bounds; `BinnedWorkingPoints` holds the per-pT-bin thresholds.
-- **Plugins**: `MuonIOTracksForestSelector` (pixel and seeds IO), `MuonOITracksForestSelector` (both OI chains): extract the features of all tracks, score them in one batched call, output the selected tracks and the scores of all input tracks; `modelPath` is a required `FileInPath`; `nFeatures` is checked once against the extractor; inputs are read with `iEvent.get` (a missing product is an error); debugging output via MessageLogger (the IO plugin printed one line per event to stdout); `dumpFeatures` prints one `MUONHP_FEATURES,<label>,<run>,<lumi>,<event>,<track>,<features>,<score>` line per track for the cross-check.
+- **Models**: `RecoMuon/L3TrackFinder/data/IO/muonHP_IO_{pixelPath,seedsPath}_forest_v1.bin` and `data/OI/muonHP_OI_{pixelPath,seedsPath}_forest_v1.bin` (family / HLT chain / version), described in `data/README.md` (selector, chain, input tracks, cfi module, trees, test performance, training commit, md5). No other model files remain in `data/`. For the upstream PR they belong in cms-data (`RecoMuon-L3TrackFinder`).
+- **Features**: `interface/IOTrackSelectorFeatures.h` (46, `muonhp::IOTrackFeatures`: named track quantities, the L1 stub count and a `muonhp::ChamberMatch`, the nearest and second candidate of every station with their `bend`, `dEta`, `bendDiff`), `interface/MuonChamberMatch.h` (the search window and the candidate search, `muonhp::matchChambers`) and `interface/OITrackSelectorFeatures.h` (22, `muonhp::OITrackFeatures`), float64 convention above.
+- **Inference**: `interface/CompactForest.h` (shared by both plugins): loads the `.bin` once per process (`GlobalCache`), re-lays it out for cache locality and validates it against the extractor (feature indices inside the feature vector, children after parents, exact file size) — loading a model trained on another feature set fails with a clear error; `BinnedWorkingPoints` holds the per-pT-bin thresholds.
+- **Plugins**: `MuonIOTracksForestSelector` (pixel and seeds IO), `MuonOITracksForestSelector` (both OI chains): extract the features of all tracks, score them in one batched call, output the selected tracks and the scores of all input tracks; `modelPath` is a required `FileInPath`; `nFeatures` is checked once against the extractor; inputs are read with `iEvent.get` (a missing product is an error); debugging output via MessageLogger; `dumpFeatures` prints one `MUONHP_FEATURES,<label>,<run>,<lumi>,<event>,<track>,<features>,<score>` line per track for the cross-check. The IO plugin also reads the DT, CSC and GEM segments, the GEM and RPC rec-hits (`dtSegments`, `cscSegments`, `gemSegments`, `gemRecHits`, `rpcRecHits`; defaults: the HLT collections) and the muon geometries, and builds once per event the list of segments and hits in global coordinates.
 - **cfis**: `hltPhase2MuonPixelTracksHighPurityForest_cfi.py`, `hltPhase2MuonIOTrackSelectionHighPurityForest_cfi.py`, `hltPhase2L3OIMuonTrackSelectionHighPurityForest_cfi.py`; model path and working points are written from the trainings' `thresholds.json` by `production/deploy_cmssw.py` and checked by `production/check_consistency.py --cmssw-src`.
-- **Wiring**: the process modifiers `phase2MuonPixelTracksSelector` / `phase2MuonSeedsSelector` (and `ngtScouting`, pixel chain) swap the forests into `HLTPhase2MuonPixelTracksFromL1TkSequence` (IO pixel), `HLTPhase2L3MuonsIOSequence` (IO seeds) and `hltPhase2L3OIMuonTrackSelectionHighPurity` (OI). Fixed: the seeds-chain n-tuple table, HLT track validation and associator still referenced `hltPhase2MuonIOTrackSelectionHighPurity`, removed with the DNN selector (now `...HighPurityForest`).
+- **Wiring**: the process modifiers `phase2MuonPixelTracksSelector` / `phase2MuonSeedsSelector` (and `ngtScouting`, pixel chain) swap the forests into `HLTPhase2MuonPixelTracksFromL1TkSequence` (IO pixel), `HLTPhase2L3MuonsIOSequence` (IO seeds) and `hltPhase2L3OIMuonTrackSelectionHighPurity` (OI). The muon local reconstruction runs before the IO selectors in both chains.
 - **Tests**: `test/forestSelectorsSmoke_cfg.py` constructs the four selectors and loads/validates their forests; the per-track behaviour on real events is checked by `production/features_validation/validate_cmssw.py`.
 
-### Behaviour in CMSSW
-
-**Inference code.** `CompactForest` re-lays every tree out depth-first as packed 8-byte nodes at load time (the file format is unchanged) and the plugins score all tracks of an event in one call, tree-major (a tree's nodes are reused across the event's tracks while in cache). Scores are bit-identical to the plain traversal (checked on 7,256 tracks between runs). Single-thread cost per track on real feature vectors (`features_validation/forest_bench.cc`):
-
-| Model | File layout | Packed | Packed + batched (8 tracks) |
-|---|---|---|---|
-| IO pixel v2 (3250 trees, depth 6) | 122 µs | 136 µs | 81 µs |
-| IO pixel v3 (800 trees, depth 12) | 145 µs | 91 µs | 65 µs |
-| IO seeds v2 (4050 trees, depth 6) | 156 µs | 172 µs | 96 µs |
-| IO seeds v3 (1250 trees, depth 12) | 231 µs | 167 µs | 103 µs |
-| OI pixel v3 (300 trees, depth 10) | 24 µs | 17 µs | 15 µs |
-
-**Time per event in the HLT jobs** (TimeReport, same events, 12-thread jobs sharing the node; ms/event, ZMM / BsToMuMu; the full event takes ~2.0 s):
-
-| Selector | v2, previous code | v3, previous code | v2, new code | **v3, new code (deployed)** |
-|---|---|---|---|---|
-| IO pixel | 1.05 / 1.03 | 2.14 / 2.21 | 0.69 / 0.68 | **1.10 / 1.18** |
-| IO seeds | 1.56 / 1.98 | 4.57 / 5.10 | 1.01 / 1.12 | **2.16 / 2.45** |
-| OI (pixel chain) | 0.11 / 0.12 | 0.13 / 0.15 | 0.10 / 0.11 | **0.12 / 0.13** |
-| OI (seeds chain) | 0.08 / 0.10 | 0.10 / 0.11 | 0.08 / 0.09 | **0.09 / 0.10** |
-
-The deep IO forests visit fewer nodes but have 3–4x more of them (16/25 MB), so they stay memory-bound: in the busy multi-threaded job the deployed v3 IO selectors cost about as much as the v2 ones did with the previous code (+0.05–0.15 ms pixel, +0.5–0.6 ms seeds per event, ≤ 0.03% of the event time) and ~1.6–2.2x the v2 models on the new code. Results: `features_validation/results/timing_forest_selectors.json`.
-
-**Out-of-sample check (RelVal).** On the same 500 RelVal events per chain (tracks with MC truth from the training NANO), every model separates signal from fakes much worse than on the training test split (IO ROC-AUC 0.96–0.975 vs 0.999+), including the BsToMuMu RelVal against the training's own Bs→μμ files (0.965 vs 0.998): the April–May 2026 training n-tuples are not representative of the current HLT reconstruction on these samples. Between models the differences are within the model-to-model variance of this small sample (retraining v2's own configuration moves the fakes kept at fixed efficiency by ~30% for the seeds selector): at v2's efficiency, fakes/event are v2 0.51 / v3 0.46 (pixel) and v2 0.48 / v3 0.63 (seeds). At their deployed working points the v3 IO selectors sit at higher muon efficiency (pixel 0.981 vs 0.972, seeds 0.934 vs 0.916) with more fakes (0.68 vs 0.54, 0.95 vs 0.50 per event): the per-bin set points are derived in the training domain and shift outside it. Results: `features_validation/results/relval_model_comparison_io_*.json`; `compare_models_relval.py` reruns it on any NANO.
-
-## L1TkMuon input selectors
-
-The HP forests only see the tracks the L1TkMuon-based selectors keep: `MuonTracksSelectorFromL1TkMuon` (`hltPhase2MuonPixelTracks`, best pixel track per L1TkMuon by a dR/dz/curvature score) and `MuonSeedsSelectorFromL1TkMuon` (`hltPhase2MuonIOTrackSeeds`, LST seeds around each L1TkMuon, arbitrated per L1TkMuon). `production/input_selectors/` measures, with MC truth on the selector inputs, the fraction of muons (TrackingParticles, pT > 2 GeV, |η| < 2.4, reconstructed in the input collection and having their own L1TkMuon) that each selection keeps.
-
-**Pixel-track selector: no losses.** Every reachable muon keeps its pixel track (403/403 ZMM, 371/371 BsToMuMu, 250 events each); keeping the 2 or 3 best tracks per L1TkMuon (`nTracksToKeep`) recovers nothing and adds 2–3 pixel tracks (0.2–0.3 fakes after the HP forest) per event, so `nTracksToKeep = 1` is right. Apparent losses with a loose dR < 0.3 cone are muons without their own L1TkMuon (the nearest candidate belongs to another particle: 2–14 cm apart in z). Cleanup: `trackMinPt`/`trackMaxEta` were read but never applied (0.06% of the tracks, of which 584 genuine muons in the training sample, would fall below 0.9 GeV); removed from the plugin and the cfi.
-
-**Seed selector: two bugs fixed.**
-1. *Seed direction at the wrong place.* The seed pT/η/φ were taken from `seed.startingState()`, which sits on the outermost seed hit (up to R ≈ 1 m for LST seeds), while the L1TkMuon direction is a vertex quantity: at 2–3 GeV the bending rotates φ by ~0.2–0.3 rad, the genuine seed loses the dR-driven arbitration to unrelated seeds (and leaves the 0.4 cone below ~1.6 GeV). The seed is now taken at its closest approach to the beam line (`TSCBLBuilderNoMaterial`, new `beamSpot` parameter).
-2. *Arbitration gated on the L1TkMuon pT.* Seeds above `maxPtForCompatibilityCheck` (25 GeV) are kept unconditionally, but the arbitration of the others only ran for L1TkMuons below 25 GeV: the genuine seeds of a higher-pT L1TkMuon measured just below 25 GeV were dropped. The arbitration now runs for every L1TkMuon (it can only add seeds; rare in these samples).
-
-Muons kept (reachable = reconstructed by LST, own L1TkMuon; 250 events per sample):
-
-| | ZMM seeds (2–5 GeV) | ZMM IO tracks | BsToMuMu seeds (2–5 GeV) | BsToMuMu IO tracks | Seeds / fakes per event (ZMM, Bs) |
-|---|---|---|---|---|---|
-| Before | 0.971 (0.739) | 0.968 | 0.924 (0.866) | 0.924 | 7.05 / 5.43, 7.95 / 6.48 |
-| Threshold fix | 0.971 (0.739) | 0.968 | 0.924 (0.866) | 0.924 | 7.06 / 5.44, 7.95 / 6.48 |
-| **Both fixes** | **0.998 (1.000)** | **0.995** | **1.000 (1.000)** | **1.000** | 7.09 / 5.38, 7.88 / 6.27 |
-
-Keeping 3–4 seeds per L1TkMuon (instead of 2) recovered only half of the losses before the fix and is unnecessary after it. End to end (IO tracks after the HP forest, all fixes, v3 models): pixel chain 0.980 (ZMM) / 0.987 (Bs), seeds chain 0.949 / 0.956; the remaining losses are 2–5 GeV muons rejected by the HP forests (mostly non-prompt muons of the RelVal events, see the out-of-sample check). The IO seeds forest was trained on n-tuples produced with the old seed selector. Results: `production/input_selectors/results/`.
-
-## OI feature extraction and the CMSSW parity fix (v2 campaign)
-
-The OI selectors extract 26 features (22 kept): 12 log-compressed track/branches + 5 plain + 6 derived + 2 standalone-matching features (`l2_mu_vtx_hasMatch`, `l2_mu_vtx_matchingScore`) + the soft `is_low_pt`. The training-side extraction (`production/oi/OI_features.py`) mirrors the C++ extractor feature-for-feature, which the legacy OI DNN training (`tests/OI_*_model.py`) did **not**: wrapped track-to-standalone Δφ, matching score (χ²η + χ²φ + χ²pT + χ²dz)/9, no-match imputation 10.0 in raw space.
+- **Inference cost**: `CompactForest` re-lays every tree out depth-first as packed 8-byte nodes at load time (the file format is unchanged) and the plugins score all tracks of an event in one call, tree-major (a tree's nodes are reused across the event's tracks while in cache); scores are bit-identical to the plain traversal. `features_validation/forest_bench.cc` measures the cost per track, the TimeReport of the validation jobs the cost per event.
+- **Input selectors**: the HP forests only see the tracks the L1TkMuon-based selectors keep. `MuonTracksSelectorFromL1TkMuon` (`hltPhase2MuonPixelTracks`) keeps the best pixel track per L1TkMuon by a dR/dz/curvature score (`nTracksToKeep = 1` in `hltPhase2MuonPixelTracks_cfi.py`). `MuonSeedsSelectorFromL1TkMuon` (`hltPhase2MuonIOTrackSeeds`) keeps LST seeds around each L1TkMuon, arbitrated per L1TkMuon, with the seed direction taken at its closest approach to the beam line (`beamSpot` parameter). `production/input_selectors/` measures the fraction of muons each selection keeps.
 
 ## Decisions and rationale
 
 **Training protocol**
 - *Muon guns with pileup, plus Bs→μμ.* Particle-gun muons over the full HLT pT spectrum keep the selection independent of any specific physics process; pileup mixing provides the non-isolated environment and its fakes; Bs→μμ adds mildly displaced muons. Physics samples such as tt̄ or DY are deliberately not part of the training.
-- *Event-level split, test used once.* Tracks of one event share pileup, vertex and duplicates of the same muon, so a track-level split leaks; evt10 assigns whole events. Forest size, working points and hyperparameters are all chosen on validation; the test split only reports.
-- *F2 per-pT-bin working points.* F2 weighs recall 4x over precision: a muon track lost by the HP selection is not recovered downstream, while a kept fake costs rate and time. The fake/muon ratio at the input varies by more than three orders of magnitude over pT (IO: 5–11 at 2–5 GeV, ≤ 0.06 above 10 GeV), so a single threshold is too loose at low pT or too tight at high pT. Bins with < 100 validation muons or no background use the global F2 threshold rather than a noisy per-bin optimum.
-- *Tree budget + validation prefix selection, no early stopping.* The full 5000-tree size curve is scored at validation-chosen working points (the production criterion), and the smallest prefix within 0.001 of the best is kept. 0.001 is below the fold-to-fold spread of the validation F2 (0.0006–0.0018 between folds 3 and 9 at the chosen sizes), so the extra trees would buy no measurable performance while costing inference time; the chosen sizes (200–1250 trees) are far below the budget.
-- *Deep forests* (IO: depth 12 / η 0.2, OI: depth 10 / η 0.1): best validation F2 at equal CMSSW inference cost on two folds (scan above).
-- *Host-side quantile sketch.* The GPU sketch of weighted data differs between processes (the v2 models could not be re-created from their own configuration); the `QuantileDMatrix` sketch is computed on the host and the trees are still grown on the GPU, so every output is reproducible bit for bit.
+- *Copy-aware split, test used once.* Tracks of one event share pileup and duplicates, and with a recycled pileup pool the same track recurs across events, so neither a track-level nor an event-level split is independent; the copy-aware split keeps every recurring track on one side. Forest size is chosen on validation, the recipe on the test split of scratch trainings together with independent RelVal events; the test split of the production training only reports. The RelVal events never enter the training of a forest: one set pins the working points, a disjoint set validates the result.
+- *Recall-target working points per pT bin, pinned on independent events.* A muon track lost by the HP selection is not recovered downstream, while a kept fake costs rate and time; the selector should act like the muon identification, keeping the muons. The recall is fixed bin by bin: 98% below 3 GeV (where the fakes are and the separation is worst), 99% at 3–5 GeV, 99.5% above, for all four selectors. For the IO selectors the fraction refers to the muons of the signal event, and the thresholds are set on the muons of independent RelVal events where these populate the bin: the gun and Bs muons of the training sample are not distributed like those of physics samples, and thresholds set on them give a recall that is off by up to a point there, in either direction.
+- *Tree budget + validation prefix selection, no early stopping.* The full size curve is scored at the validation-chosen working points (the production criterion) and the smallest prefix within a tolerance of the best validation fake rejection is kept. The budget bounds what the selection can choose: for the deep forests of the seeds chain the validation split of the training sample, which shares the pileup pool with the training, keeps improving with trees that cost fakes on independent events, so the budget is set on those (400 trees).
+- *Depth per chain.* The IO forests learn the matching bands of 11 stations from raw quantities and need depth (8 for the pixel tracks, where depths 6 to 12 are level on independent events; 12 for the IO tracks of the seeds chain, where depths 10 to 14 are level and depth 8 is not better); the OI forests, on track quantities, use depth 4.
+- *Host-side quantile sketch.* The GPU sketch of weighted data differs between processes; the `QuantileDMatrix` sketch is computed on the host and the trees are grown on the GPU or the CPU.
+
+**Muon-chamber matching**
+- *Local reconstruction instead of L1 quantities.* The input tracks are already selected by their match to an L1 tracker muon, so the L1 matching quantities separate little; whether the track has compatible segments and hits in the muon stations separates much more. One L1 quantity is kept, the number of endcap stubs.
+- *Raw quantities of the candidates, one forest.* The forest gets the bend and the η difference of the candidates and learns where a muon's own lie. The alternatives were calibration tables of the expected bend per station and η (hard-coded constants to maintain per geometry) and a second forest scoring every track–object pair (two models to train, deploy and keep consistent). A single forest on raw quantities needs neither and comes close once it is deep enough: at the same working points it keeps about 5% (pixel chain) and 20% (seeds chain) more fakes than the two-forest version.
+- *Candidates by |dEta|, on the charge side.* The only choices of the matching are the wide search window and the order of the candidates: nearest in the coordinate the field does not bend, among the objects displaced on the side the charge bends to. The nearest candidate is the muon's own in 70–95% of the cases depending on the station; the second candidate is given where it is not (ME0, station 1 and the two GEM stations).
+- *GEM and RPC rec-hits.* GE1/1 and GE2/1 have no segments at the HLT and the RPC stations complement the DT/CSC segments: their hits enter as stations of their own.
 
 **Training/CMSSW agreement**
-- *float64 feature convention.* Inputs rounded to float32 (as the n-tuples store them), arithmetic in float64, one rounding per feature: numpy computes in float64 by default, and making the C++ follow it is exact and simple, while float32 arithmetic would need op-by-op agreement between numpy and libm. The convention removed the v2 IO mismatch (177 nodes split between the float and double values of an imputed constant).
+- *float64 feature convention.* Inputs rounded to float32 (as the n-tuples store them), arithmetic in float64, one rounding per feature: numpy computes in float64 by default, and making the C++ follow it is exact and simple, while float32 arithmetic would need op-by-op agreement between numpy and libm. A float/double mismatch of one imputed constant is enough to put tracks on the wrong side of forest splits.
 - *One feature ABI.* The feature order is asserted name by name against the C++ extractors at every training, and the plugins validate every `.bin` against the extractor when they load it.
-- *Compact `.bin` format, fp32.* No ONNX Runtime in the HLT path, 2.5x smaller than the ONNX serialisation, traversal replayed in Python at every training (0 decision flips) and on real events; fp16 leaf values accumulate ~0.2 score error over thousands of trees. NaN goes right (the exporter refuses default-left nodes, so the traversal needs no missing-value flags). ONNX is kept as a verified secondary export.
-- *Packed, batched inference.* The deep v3 forests have 3–4x more nodes than v2; the packed depth-first layout and tree-major batching keep their HLT cost at the level of the v2 models on the previous code (Behaviour in CMSSW).
-
-**Model choice**
-- *Keep v3 despite the RelVal check.* On the test split v3 keeps 31% (pixel) / 50% (seeds) fewer fakes at higher recall, on 2.8M / 5.7M test tracks. On the 500 RelVal events all models, whatever their depth, rank signal and fakes equally within the reach of the sample. Fakes/event at v2's efficiency:
-
-  | IO selector | v2 | depth 6 (v2 configuration, retrained) | depth 8 | depth 10 | v3 (depth 12) |
-  |---|---|---|---|---|---|
-  | pixel | 0.51 | 0.46 | 0.47 | 0.44 | 0.46 |
-  | seeds | 0.48 | 0.61 | 0.57 | 0.59 | 0.63 |
-
-  The v2 configuration retrained is as far from v2 as v3 is. The large drop of every model on RelVal (ROC-AUC 0.96–0.975 vs 0.999+) is a training-sample issue that no depth choice fixes: re-evaluate the depth on the new n-tuples with a larger out-of-sample check.
-- *IO vs OI configurations.* The OI validation F2 is flat across the scan (±0.0005); depth 10 / η 0.1 is marginally but consistently ahead of depth 6 on both folds at a third of its inference cost, and depth 12 / η 0.2 collapses to ~100 trees for no gain.
+- *Compact `.bin` format, fp32.* No ONNX Runtime in the HLT path, 2.5x smaller than the ONNX serialisation, traversal replayed in Python at every training (0 decision flips) and on real events; fp16 leaf values accumulate ~0.2 score error over thousands of trees. NaN goes right (the exporter refuses default-left split nodes, so the traversal needs no missing-value flags). ONNX is kept as a verified secondary export.
+- *Packed, batched inference.* Deep forests have hundreds of thousands of nodes and are memory-bound; the packed depth-first layout and tree-major batching cut their cost per track.
 
 **Inputs of the HP forests**
-- *`nTracksToKeep = 1`* for the pixel-track selector: every reachable muon is already kept, and 2–3 tracks per L1TkMuon only add fakes.
-- *Two seeds per L1TkMuon* for the seed selector: after the direction and arbitration fixes it keeps 0.998–1.000 of the reachable muons; more seeds per L1TkMuon only recovered half of the losses before the fixes and are unnecessary after them.
+- *`nTracksToKeep = 1`* for the pixel-track selector: the best track per L1TkMuon keeps every reachable muon on ZMM and all but 0.2% on BsToMuMu, and more tracks per L1TkMuon add fakes. On TTbar, where the muons are not isolated, it loses 1.1% of them to a track closer to the L1TkMuon; a second track per L1TkMuon recovers them for 0.04–0.07 more fakes per event after the forest (Validation in CMSSW). The forest is trained and its working points are pinned on the one-track input, and the two-track option has not been run through the full chain: it is not adopted.
+- *Two seeds per L1TkMuon* for the seed selector: with the seed direction taken at the beam line it keeps practically every reachable muon, so more seeds per L1TkMuon are unnecessary.
 
 **Deployment**
 - *Model files* in `RecoMuon/L3TrackFinder/data/IO` and `/OI`, named by family, HLT chain and version (`muonHP_<IO|OI>_<pixelPath|seedsPath>_forest_<version>.bin`). A deployed retraining always gets a new version (`model_version`): files in cms-data are immutable and a changed model under an old name would silently change results. `deploy_cmssw.py` writes the cfi working points from `thresholds.json` (never by hand), and `check_consistency.py --cmssw-src` verifies files, checksums and cfi values.
 - *No machine-specific paths in code.* Every input is a command-line flag (How to run the training chain) rather than a path in the code or an environment variable; the records (`manifest.json`, `train.log`) keep the absolute input paths as provenance.
 - *DNN exports* pin the TorchScript ONNX exporter (`dynamo=False`, opset 13): torch ≥ 2.9 switches the default to the dynamo exporter.
-
-## Possible improvements
-
-**Models**
-- **Training samples (largest open item).** On current RelVal events all models separate genuine muons from fakes much worse than on their own test split (IO ROC-AUC 0.96–0.975 vs 0.999+). The drop is as large for the BsToMuMu RelVal against the training's own Bs→μμ files (0.965 vs 0.998), i.e. for the same process, so it points to the reconstruction having changed since the April–May 2026 n-tuples rather than to the sample composition: re-produce the gun + Bs→μμ n-tuples with the current HLT configuration (including the fixed seed selector, whose recovered low-pT muons are absent from the v3 seeds training sample), retrain (one command per flavour) and re-derive the working points, then choose the forest depth on an out-of-sample check with more than the 500 events used here. If the gap persists with current n-tuples, compare RelVal and training tracks feature by feature.
-- The IO HP forests reject a sizeable fraction of the low-pT (2–5 GeV) muons of the RelVal events (mostly non-prompt), more than of the gun/Bs→μμ training muons: same remedy.
-- Per-η (or η×pT) working points (the machinery — bin edges + thresholds — exists on both sides).
-- Probability calibration (Platt/isotonic) if calibrated scores are needed; otherwise publish an efficiency-vs-threshold table alongside the F2 points.
-- The `duplicate` flag (currently unused) as an auxiliary target or third class.
-- The C++ OI `hasMatch` feature is ~always 1 in events containing any standalone muon (bestScore < 25 over the best candidate); a track-level compatibility window would make it informative.
-- The v3 IO `.bin` files are 16/25 MB (deep trees): if file size matters for cms-data, `max_leaves` or a node budget in the size selection would shrink them.
-
-**Pipeline**
-- Redo the 44→33 IO pruning with the nested-split protocol of the scan (it was selected on the data that measured it).
-- Fix the misnamed `impact3D` (log₁₀(dxy²+dz²) of the *squared* 3D impact parameter; renaming changes the feature ABI on both sides).
-- Revive the DNN backend only after retraining on the deployed 33/22-feature sets and the float64 convention.
