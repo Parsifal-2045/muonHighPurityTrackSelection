@@ -39,6 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 sys.path.insert(0, os.path.join(HERE, "..", "oi"))
 
+import chamber_match  # noqa: E402
 import forest_pipeline as fp  # noqa: E402
 import OI_features as oif  # noqa: E402
 import pixel_features as pf  # noqa: E402
@@ -143,13 +144,15 @@ def main():
         if lab not in dump:
             raise SystemExit(f"no MUONHP_FEATURES lines for {lab} in {a.log}")
     io_pfx = ch["io_prefix"]
-    br = (pf.tk_branches(io_pfx) + pf.L1TKMUON_BRANCHES + pf.STUB_BRANCHES + oif.TK_BRANCHES
-          + oif.L2_MU_VTX_BRANCHES + ["run", "luminosityBlock", "event"])
     with uproot.open(a.nano) as f:
-        arr = f["Events"].arrays(sorted(set(br)))
+        tree = f["Events"]
+        br = (pf.tk_branches(io_pfx) + pf.L1TKMUON_BRANCHES + pf.STUB_BRANCHES + chamber_match.branches()
+              + oif.TK_BRANCHES + oif.L2_MU_VTX_BRANCHES + ["run", "luminosityBlock", "event"])
+        arr = tree.arrays(sorted(set(br)))
     out = []
     keys, X, y, names = python_features(
-        arr, f"{io_pfx}_pt", pf.build_dataset, dict(prefix=io_pfx), pf.io_drop_features(io_pfx),
+        arr, f"{io_pfx}_pt", pf.build_dataset,
+        dict(prefix=io_pfx, chamberMatch=True), None,
         pf.io_production_features(io_pfx))
     out.append(check_selector(f"IO {a.chain} ({ch['io_label']})", dump[ch["io_label"]], keys, X, y, names,
                               a.io_model, names.index(f"{io_pfx}_pt")))

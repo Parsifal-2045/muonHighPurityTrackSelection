@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-compare_models_relval.py - compare two IO/OI forest versions on the tracks of
-RelVal n-tuples (outside the training samples), threshold-free and at the
-deployed working points.
+compare_models_relval.py - IO/OI forests on the tracks of RelVal n-tuples
+(outside the training samples), at their deployed working points.
 
-For each model: ROC-AUC, PR-AUC, the signal efficiency and fakes per event at
-its deployed per-pT-bin working points, and the fakes per event it keeps when
-tuned to the same signal efficiency as the reference model (threshold scan on
-the scores, i.e. equal-efficiency comparison of the rankings).
+Every model directory is scored with its own feature list (thresholds.json),
+so forests with different feature sets can be compared on the same tracks.
+For each model: ROC-AUC, the fakes kept per event and the muon recall at the
+deployed per-pT-bin working points, per working-point bin; for the IO family
+the recall is given for all muon tracks and for the muons of the signal event
+(generator-level muons; the rest are pileup muons).
 
 Usage:
     python compare_models_relval.py --family IO --prefix muon_pixel_tracks \
-        --nano a.root [b.root ...] --models ../io/archive/pixel_xgb_output_33f_v2 ../io/pixel
+        --nano a.root [b.root ...] --models ../io/archive/pixel_xgb_output_33f_dev5 ../io/pixel [--json out.json]
 """
 
 import argparse
@@ -22,7 +23,7 @@ import sys
 import numpy as np
 import uproot
 import xgboost as xgb
-from sklearn.metrics import average_precision_score, roc_auc_score
+from sklearn.metrics import roc_auc_score
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
@@ -34,23 +35,23 @@ import pixel_features as pf  # noqa: E402
 
 
 def features(nano, family, prefix):
+    """(X with every feature a model may ask for, names, y, pT, signal-muon flag or None, events)."""
     if family == "IO":
-        br = pf.tk_branches(prefix) + pf.L1TKMUON_BRANCHES + pf.STUB_BRANCHES
-        build, kw = pf.build_dataset, dict(prefix=prefix)
-        drop, abi, ptn = pf.io_drop_features(prefix), pf.io_production_features(prefix), f"{prefix}_pt"
+        br = pf.io_branches(prefix)
+        build = pf.build_dataset
+        kw = dict(prefix=prefix, chamberMatch=True, signalMuonFlag=True)
+        ptn = f"{prefix}_pt"
     else:
-        br = oif.TK_BRANCHES + oif.L2_MU_VTX_BRANCHES
-        build, kw = oif.build_dataset, {}
-        drop, abi, ptn = oif.OI_DROP_FEATURES, oif.OI_PRODUCTION_FEATURES, "l3_tk_OI_pt"
+        br, build, kw, ptn = oif.TK_BRANCHES + oif.L2_MU_VTX_BRANCHES, oif.build_dataset, {}, "l3_tk_OI_pt"
     Xs, ys, n_ev = [], [], 0
     for path in nano:
         with uproot.open(path) as f:
-            arr = f["Events"].arrays(br)
-        X, y, _, _, names = build(arr, np.zeros(len(arr), dtype=np.int32), event_ids=np.arange(len(arr)), **kw)
-        X, names = fp.select_features(X, names, drop, abi)
-        Xs.append(X); ys.append(y); n_ev += len(arr)
+            for arr in f["Events"].iterate(br, step_size=20000):
+                X, y, _, _, names = build(arr, np.zeros(len(arr), dtype=np.int32), event_ids=np.arange(len(arr)), **kw)
+                Xs.append(X); ys.append(y); n_ev += len(arr)
     X = np.concatenate(Xs)
-    return X, np.concatenate(ys).astype(np.int32), 10 ** X[:, names.index(ptn)], n_ev
+    sig = X[:, names.index(pf.SIGNAL_MUON_FLAG)] > 0.5 if pf.SIGNAL_MUON_FLAG in names else None
+    return X, names, np.concatenate(ys).astype(np.int32), 10 ** X[:, names.index(ptn)], sig, n_ev
 
 
 def main():
@@ -58,29 +59,42 @@ def main():
     ap.add_argument("--family", choices=["IO", "OI"], required=True)
     ap.add_argument("--prefix", default="muon_pixel_tracks")
     ap.add_argument("--nano", nargs="+", required=True)
-    ap.add_argument("--models", nargs="+", required=True, help="model dirs; the first is the reference")
+    ap.add_argument("--models", nargs="+", required=True, help="model directories")
     ap.add_argument("--json")
     a = ap.parse_args()
-    X, y, pt, n_ev = features(a.nano, a.family, a.prefix)
-    print(f"{len(y)} tracks ({y.sum()} signal) in {n_ev} events")
-    out, ref_eff = {}, None
+    out = {}
+    X, names, y, pt, sig, n_ev = features(a.nano, a.family, a.prefix)
+    mu, fake = y == 1, y == 0
+    print(f"{len(y)} tracks in {n_ev} events: {mu.sum()} muon tracks" + (f" ({sig.sum()} of the signal event)" if sig is not None else "")
+          + f", {fake.sum() / n_ev:.3f} fakes per event")
     for d in a.models:
         th = json.load(open(os.path.join(d, "thresholds.json")))
         bst = xgb.Booster()
         bst.load_model(os.path.join(d, "model.json"))
-        s = bst.predict(xgb.DMatrix(X))
-        dec = pf.apply_binned_thresholds(s, pt, th["pt_bin_edges"], th["pt_bin_f2_thresholds"])
-        eff = float(dec[y == 1].mean())
-        res = dict(model=fp.rel(d), roc_auc=float(roc_auc_score(y, s)), pr_auc=float(average_precision_score(y, s)),
-                   eff_at_wp=eff, fakes_per_event_at_wp=float((dec & (y == 0)).sum() / n_ev))
-        ref_eff = eff if ref_eff is None else ref_eff
-        # single threshold reaching the reference efficiency on these tracks
-        thr = np.quantile(s[y == 1], 1.0 - ref_eff)
-        res["fakes_per_event_at_ref_eff"] = float(((s >= thr) & (y == 0)).sum() / n_ev)
-        out[os.path.basename(os.path.normpath(d))] = res
-        print(f"  {os.path.basename(os.path.normpath(d)):32s} ROC-AUC {res['roc_auc']:.5f} PR-AUC {res['pr_auc']:.5f} | "
-              f"deployed WPs: eff {eff:.4f}, fakes/evt {res['fakes_per_event_at_wp']:.3f} | "
-              f"at eff {ref_eff:.4f}: fakes/evt {res['fakes_per_event_at_ref_eff']:.3f}")
+        s = bst.predict(xgb.DMatrix(X[:, [names.index(f) for f in th["feature_names"]]]))
+        edges = th["pt_bin_edges"]
+        dec = pf.apply_binned_thresholds(s, pt, edges, th["pt_bin_f2_thresholds"])
+        bins = pf.pt_bins_from_edges(edges)
+        per_bin = []
+        for lo, hi in bins:
+            m = (pt >= lo) & (pt < hi)
+            per_bin.append(dict(lo=lo, hi=None if not np.isfinite(hi) else hi,
+                                fakes_per_event=float((dec & fake & m).sum() / n_ev),
+                                recall=float(dec[mu & m].mean()) if (mu & m).any() else None,
+                                recall_signal_muons=float(dec[sig & m].mean()) if sig is not None and (sig & m).any() else None))
+        tag = os.path.basename(os.path.normpath(d))
+        res = dict(model=fp.rel(d), n_features=len(th["feature_names"]), trees=th["chosen_trees"],
+                   roc_auc=float(roc_auc_score(y, s)), fakes_per_event_in=float(fake.sum() / n_ev),
+                   fakes_per_event=float((dec & fake).sum() / n_ev), recall=float(dec[mu].mean()),
+                   recall_signal_muons=float(dec[sig].mean()) if sig is not None else None, per_bin=per_bin)
+        out[tag] = res
+        fmt = lambda v: "-" if v is None else f"{v:.3f}"
+        print(f"  {tag:30s} {res['n_features']:2d} features, {res['trees']:4d} trees | ROC-AUC {res['roc_auc']:.4f} | "
+              f"fakes/evt {res['fakes_per_event']:.3f} | recall {res['recall']:.4f}"
+              + (f", signal-event muons {res['recall_signal_muons']:.4f}" if sig is not None else ""))
+        print("      per bin  fakes/evt: " + " ".join(f"{b['fakes_per_event']:.3f}" for b in per_bin)
+              + " | recall: " + " ".join(fmt(b["recall"]) for b in per_bin)
+              + (" | signal-event: " + " ".join(fmt(b["recall_signal_muons"]) for b in per_bin) if sig is not None else ""))
     if a.json:
         json.dump(out, open(a.json, "w"), indent=2)
 

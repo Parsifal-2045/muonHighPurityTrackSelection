@@ -10,7 +10,7 @@ be in the CMSSW search path (e.g. $CMSSW_BASE/external/<arch>/data/...).
 
 Usage (cmsDriver ... --customise_commands):
     import sys; sys.path.insert(0, '<dir>'); from forest_timing_cff import customise_timing
-    process = customise_timing(process, 'pixel', {'v2': {'IO': '<rel path>', 'OI': '<rel path>'}})
+    process = customise_timing(process, 'pixel', {'dev3': {'IO': '<rel path>', 'OI': '<rel path>'}})
 """
 
 import FWCore.ParameterSet.Config as cms

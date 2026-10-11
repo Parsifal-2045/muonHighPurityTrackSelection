@@ -48,7 +48,7 @@ def _fmt_thresholds(th, indent):
     for (lo, hi), thr, fb in zip(pf.pt_bins_from_edges(th["pt_bin_edges"]), th["pt_bin_f2_thresholds"],
                                  th["pt_bin_fallback"]):
         hi_s = "inf" if hi == float("inf") else f"{hi:g}"
-        note = " - global F2 fallback (no background in validation)" if fb else ""
+        note = " - global threshold fallback (too few validation muons or no background)" if fb else ""
         lines.append(f"{indent}    {thr!r},  # pT [{lo:g}, {hi_s}){note}")
     return "cms.vdouble(\n" + "\n".join(lines) + f"\n{indent})"
 
@@ -60,10 +60,12 @@ def update_cfi_block(text, var, cfg, th, man):
         raise KeyError(f"{var} not found")
     block = m.group(0)
     new = block
+    wp = ("recall-target" if th.get("wp_mode") == "recall" else "F2") + " set points" + (
+        ", pinned on independent events where they populate the bin" if th.get("wp_pinning") else " of the validation split")
     prov = (f"    # {cfg['name']} forest {cfg['model_version']}: {th['chosen_trees']} trees, {th['n_features']} features, trained "
-            f"{man['started'][:10]} (git {str(man['git_commit'])[:10]}); working points = validation per-pT-bin\n"
-            f"    # F2 set points from production/{os.path.relpath(cfg['output_dir'], HERE)}/thresholds.json "
-            f"(written by deploy_cmssw.py)\n")
+            f"{man['started'][:10]} (git {str(man['git_commit'])[:10]})\n"
+            f"    # working points = per-pT-bin {wp};\n"
+            f"    # from production/{os.path.relpath(cfg['output_dir'], HERE)}/thresholds.json (written by deploy_cmssw.py)\n")
     # comment-only lines inside the block are regenerated (provenance, per-bin labels)
     new = re.sub(r"\n[ \t]+#[^\n]*(?=\n)", "", new)
     new = re.sub(r"    modelPath = cms\.FileInPath\([^)]*\),\n",
@@ -129,8 +131,9 @@ def main():
 Compact XGBoost forests (`.bin`, format in `interface/CompactForest.h`) of the
 Phase-2 muon HLT high-purity selections, one per track family and HLT chain:
 
-- `IO/`: inside-out tracks, read by `MuonIOTracksForestSelector` (33 features,
-  `interface/IOTrackSelectorFeatures.h`);
+- `IO/`: inside-out tracks, read by `MuonIOTracksForestSelector` ({len(fl[0][0]['production_features'])} features: track
+  quantities and the raw matching quantities of the muon-station candidates, `interface/IOTrackSelectorFeatures.h`
+  and `interface/MuonChamberMatch.h`);
 - `OI/`: outside-in tracks, read by `MuonOITracksForestSelector` (22 features,
   `interface/OITrackSelectorFeatures.h`).
 

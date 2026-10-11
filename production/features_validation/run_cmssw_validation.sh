@@ -13,27 +13,31 @@
 #     -> TimeReport in the job log.
 #
 # Usage: run_cmssw_validation.sh --cmssw-src DIR --out DIR [--events N] [--threads N]
-#                                [--relval-zmm DIR] [--relval-bs DIR] [--alt-models DIR]
+#                                [--relval-zmm DIR] [--relval-bs DIR] [--geometry NAME] [--era NAME]
+#                                [--alt-models DIR]
 #   --cmssw-src   src/ of the CMSSW area with the deployed selectors
 #   --out         output directory (job configurations, logs, NANO and DQM files)
 #   --events      events per sample and chain (default 250)
 #   --threads     threads per cmsRun job (default 12; the four jobs run in parallel)
 #   --relval-zmm, --relval-bs
 #                 directories of GEN-SIM-DIGI-RAW RelVal files (default: the official
-#                 CMSSW_20_0_0_pre1 PU200 ZMM / BsToMuMu RelVals used for the v3 validation)
+#                 CMSSW_20_0_0_pre1 PU200 ZMM / BsToMuMu RelVals used for the dev3 validation)
+#   --geometry, --era
+#                 geometry and era of the input samples (default ExtendedRun4D121 / Phase2C22I13M9;
+#                 for D128 samples: ExtendedRun4D128 / Phase2C26I13M9)
 #   --alt-models  search-path directory (relative to a CMSSW_SEARCH_PATH entry) holding
 #                 IO_pixelPath_<tag>.bin, IO_seedsPath_<tag>.bin, OI_pixelPath_<tag>.bin,
-#                 OI_seedsPath_<tag>.bin for tag = the directory name (e.g. MuonHPTiming/v2),
+#                 OI_seedsPath_<tag>.bin for tag = the directory name (e.g. MuonHPTiming/dev3),
 #                 timed next to the deployed models; omit to time the deployed models only.
 set -e
 usage() { sed -n '/^# Usage/,/^set -e/p' "$0" | sed '$d; s/^# \{0,1\}//'; exit "${1:-0}"; }
-SRC=; OUT=; NEV=250; NTH=12; ALTDIR=
+SRC=; OUT=; NEV=250; NTH=12; ALTDIR=; GEOM=ExtendedRun4D121; ERA=Phase2C22I13M9
 ZP=/eos/cms/store/relval/CMSSW_20_0_0_pre1/RelValZMM_14/GEN-SIM-DIGI-RAW/PU_150X_mcRun4_realistic_v1_STD_D121_RegeneratedGS_PU-v1/2590000
 BP=/eos/cms/store/relval/CMSSW_20_0_0_pre1/RelValBsToMuMu_14TeV/GEN-SIM-DIGI-RAW/PU_150X_mcRun4_realistic_v1_BPH81_D121_RegeneratedGS_PU_20260420_144751-v1/2590000
 while [ $# -gt 0 ]; do
   case "$1" in
     -h|--help) usage ;;
-    --cmssw-src|--out|--events|--threads|--relval-zmm|--relval-bs|--alt-models)
+    --cmssw-src|--out|--events|--threads|--relval-zmm|--relval-bs|--geometry|--era|--alt-models)
       [ $# -ge 2 ] || { echo "$1 needs a value" >&2; usage 1; } ;;&
     --cmssw-src) SRC=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
@@ -41,6 +45,8 @@ while [ $# -gt 0 ]; do
     --threads) NTH=$2; shift 2 ;;
     --relval-zmm) ZP=$2; shift 2 ;;
     --relval-bs) BP=$2; shift 2 ;;
+    --geometry) GEOM=$2; shift 2 ;;
+    --era) ERA=$2; shift 2 ;;
     --alt-models) ALTDIR=$2; shift 2 ;;
     *) echo "unknown argument $1" >&2; usage 1 ;;
   esac
@@ -63,7 +69,7 @@ for s in ZMM Bs; do
     if [ -n "$ALTDIR" ]; then TAG=$(basename $ALTDIR); ALT="{'$TAG': {'IO': '$ALTDIR/IO_${P}_$TAG.bin', 'OI': '$ALTDIR/OI_${P}_$TAG.bin'}}"; fi
     cmsDriver.py step2 -s L1P2GT,HLT:75e33,NANO:@MUHLTTraining,VALIDATION:@hltValidation \
       --conditions auto:phase2_realistic_T35 --datatier NANOAODSIM,DQMIO --eventcontent NANOAODSIM,DQMIO \
-      --geometry ExtendedRun4D121 --era Phase2C22I13M9 --process HLTX --procModifiers $MOD \
+      --geometry $GEOM --era $ERA --process HLTX --procModifiers $MOD \
       "--inputCommands=keep *, drop *_hlt*_*_HLT, drop triggerTriggerFilterObjectWithRefs_l1t*_*_HLT" \
       --filein $IN -n $NEV --nThreads $NTH --no_exec --python_filename final_${chain}_${s}_cfg.py --fileout file:final_${chain}_${s}.root \
       --customise_commands "import sys; sys.path.insert(0, '$PROD/input_selectors'); sys.path.insert(0, '$PROD/features_validation'); from input_selector_study_cff import customise_$chain; from forest_timing_cff import customise_timing; process = customise_$chain(process); process = customise_timing(process, '$chain', $ALT); process.$IO.dumpFeatures = True; process.hltPhase2L3OIMuonTrackSelectionHighPurity.dumpFeatures = True; $LOGCFG" \

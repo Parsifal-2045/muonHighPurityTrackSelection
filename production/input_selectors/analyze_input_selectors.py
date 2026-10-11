@@ -33,6 +33,7 @@ import xgboost as xgb
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 
+import chamber_match  # noqa: E402
 import forest_pipeline as fp  # noqa: E402
 import pixel_features as pf  # noqa: E402
 
@@ -76,8 +77,11 @@ def hp_pass(arr, prefix, model_dir):
     bst = xgb.Booster()
     bst.load_model(os.path.join(model_dir, "model.json"))
     X, _, _, _, names = pf.build_dataset(arr, np.zeros(len(arr), dtype=np.int32), event_ids=np.arange(len(arr)),
-                                         prefix=prefix)
-    X, names = fp.select_features(X, names, pf.io_drop_features(prefix), pf.io_production_features(prefix))
+                                         prefix=prefix, chamberMatch=True)
+    # the model's feature list, with the prefix of its chain's selector input replaced by that of this table
+    base = next(p for p in (pf.PIXEL_PREFIX, pf.SEEDS_PREFIX) if any(n.startswith(p + "_") for n in th["feature_names"]))
+    wanted = [prefix + n[len(base):] if n.startswith(base + "_") else n for n in th["feature_names"]]
+    X, names = fp.select_features(X, names, None, wanted)
     s = bst.predict(xgb.DMatrix(X))
     pt = 10 ** X[:, names.index(f"{prefix}_pt")]
     dec = pf.apply_binned_thresholds(s, pt, th["pt_bin_edges"], th["pt_bin_f2_thresholds"])
@@ -91,7 +95,9 @@ def analyse(path, chain, model_dir):
     cols = COLLECTIONS[chain]
     with uproot.open(path) as f:
         tree = f["Events"]
+        chamber = set(chamber_match.branches())
         br = [b for b in tree.keys() if b.split("_")[0] in ("L1TkMu", "L1TkMuStub", "run", "event", "luminosityBlock")
+              or b in chamber
               or any(b.startswith(c + "_") for c in [cols["input"]] + cols["selected"])]
         arr = tree.arrays(br)
     hp = {c: hp_pass(arr, c, model_dir) for c in cols["hp"]} if model_dir else {}

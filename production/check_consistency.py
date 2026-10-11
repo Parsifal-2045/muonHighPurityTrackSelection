@@ -153,7 +153,7 @@ def check_model(cfg, cfi_var, cmssw_src, rep):
               f"max|diff| ONNX {d_onnx:.1e}, .bin {d_bin:.1e}")
 
     bad = [ln.strip() for ln in open(d + "train.log", errors="replace") if LOG_PROBLEMS.search(ln)
-           and "fallback -> global F2" not in ln]
+           and "fallback -> global" not in ln]
     rep.check(not bad, "train.log free of warnings/errors", f"{len(bad)} lines, e.g. {bad[:2]}" if bad else "")
     ver = man.get("verification", {})
     rep.check(ver.get("compact_bin", {}).get("decision_flips") == 0, "training-time .bin replay: 0 WP decision flips",
@@ -166,7 +166,7 @@ def check_model(cfg, cfi_var, cmssw_src, rep):
     rep.check(p.get("modelPath") == cfg["cmssw_bin"], f"cfi modelPath = {cfg['cmssw_bin']}", p.get("modelPath"))
     deployed = os.path.join(cmssw_src, p.get("modelPath", ""))
     rep.check(os.path.isfile(deployed) and md5(deployed) == bin_md5, "deployed .bin is byte-identical to model_compact.bin")
-    rep.check(p.get("decisionThreshold") == th["global_f2_threshold"], "cfi decisionThreshold = global F2 threshold")
+    rep.check(p.get("decisionThreshold") == th["global_f2_threshold"], "cfi decisionThreshold = global threshold")
     rep.check(p.get("ptBinEdges") == th["pt_bin_edges"], "cfi ptBinEdges")
     rep.check(p.get("decisionThresholds") == th["pt_bin_f2_thresholds"], "cfi decisionThresholds (exact)")
     rep.check(p.get("nFeatures") == th["n_features"], "cfi nFeatures")
@@ -186,7 +186,7 @@ def main():
                        for r, _, fs in os.walk(data) for f in fs if f.endswith(".bin"))
         expected = sorted(cfg["cmssw_bin"] for cfg, _ in fl)
         print("\nCMSSW data directory")
-        rep.check(found == expected, "only the four deployed .bin files are present",
+        rep.check(found == expected, "only the deployed .bin files are present",
                   f"extra {sorted(set(found) - set(expected))}, missing {sorted(set(expected) - set(found))}")
     print(f"\n{'ALL CHECKS PASSED' if not rep.failures else f'{rep.failures} CHECK(S) FAILED'}")
     sys.exit(1 if rep.failures else 0)
