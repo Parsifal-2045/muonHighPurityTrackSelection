@@ -1,0 +1,322 @@
+{
+  "pixel chain, ZMM+BsToMuMu, no selection": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 10389,
+      "muons": 9055,
+      "found": 7095,
+      "fakes_per_event": 2.0778,
+      "muons_per_event": 1.811,
+      "efficiency": 0.8504135203164329
+    },
+    "after_id": {
+      "fakes": 5050,
+      "muons": 7704,
+      "found": 6837,
+      "fakes_per_event": 1.01,
+      "muons_per_event": 1.5408,
+      "efficiency": 0.8194893923049262
+    }
+  },
+  "pixel chain, ZMM+BsToMuMu, dev5": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 5709,
+      "muons": 10571,
+      "found": 7145,
+      "fakes_per_event": 1.1418,
+      "muons_per_event": 2.1142,
+      "efficiency": 0.8564065683806784
+    },
+    "after_id": {
+      "fakes": 2981,
+      "muons": 7707,
+      "found": 6855,
+      "fakes_per_event": 0.5962,
+      "muons_per_event": 1.5414,
+      "efficiency": 0.8216468896080547
+    }
+  },
+  "pixel chain, ZMM+BsToMuMu, dev6": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 2647,
+      "muons": 11878,
+      "found": 7235,
+      "fakes_per_event": 0.5294,
+      "muons_per_event": 2.3756,
+      "efficiency": 0.8671940548963203
+    },
+    "after_id": {
+      "fakes": 1190,
+      "muons": 7774,
+      "found": 6901,
+      "fakes_per_event": 0.238,
+      "muons_per_event": 1.5548,
+      "efficiency": 0.8271604938271605
+    }
+  },
+  "pixel chain, ZMM+BsToMuMu, v1": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 2506,
+      "muons": 11986,
+      "found": 7238,
+      "fakes_per_event": 0.5012,
+      "muons_per_event": 2.3972,
+      "efficiency": 0.867553637780175
+    },
+    "after_id": {
+      "fakes": 1105,
+      "muons": 7786,
+      "found": 6911,
+      "fakes_per_event": 0.221,
+      "muons_per_event": 1.5572,
+      "efficiency": 0.8283591034400096
+    }
+  },
+  "pixel chain, TTbar, no selection": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 5270,
+      "muons": 2264,
+      "found": 1304,
+      "fakes_per_event": 2.108,
+      "muons_per_event": 0.9056,
+      "efficiency": 0.8670212765957447
+    },
+    "after_id": {
+      "fakes": 2580,
+      "muons": 1637,
+      "found": 1263,
+      "fakes_per_event": 1.032,
+      "muons_per_event": 0.6548,
+      "efficiency": 0.8397606382978723
+    }
+  },
+  "pixel chain, TTbar, dev5": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 3117,
+      "muons": 2967,
+      "found": 1309,
+      "fakes_per_event": 1.2468,
+      "muons_per_event": 1.1868,
+      "efficiency": 0.870345744680851
+    },
+    "after_id": {
+      "fakes": 1614,
+      "muons": 1638,
+      "found": 1272,
+      "fakes_per_event": 0.6456,
+      "muons_per_event": 0.6552,
+      "efficiency": 0.8457446808510638
+    }
+  },
+  "pixel chain, TTbar, dev6": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 1588,
+      "muons": 3689,
+      "found": 1323,
+      "fakes_per_event": 0.6352,
+      "muons_per_event": 1.4756,
+      "efficiency": 0.879654255319149
+    },
+    "after_id": {
+      "fakes": 716,
+      "muons": 1662,
+      "found": 1282,
+      "fakes_per_event": 0.2864,
+      "muons_per_event": 0.6648,
+      "efficiency": 0.8523936170212766
+    }
+  },
+  "pixel chain, TTbar, v1": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 1538,
+      "muons": 3720,
+      "found": 1323,
+      "fakes_per_event": 0.6152,
+      "muons_per_event": 1.488,
+      "efficiency": 0.879654255319149
+    },
+    "after_id": {
+      "fakes": 697,
+      "muons": 1666,
+      "found": 1286,
+      "fakes_per_event": 0.2788,
+      "muons_per_event": 0.6664,
+      "efficiency": 0.8550531914893617
+    }
+  },
+  "seeds chain, ZMM+BsToMuMu, no selection": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 14273,
+      "muons": 9200,
+      "found": 7158,
+      "fakes_per_event": 2.8546,
+      "muons_per_event": 1.84,
+      "efficiency": 0.8579647608773823
+    },
+    "after_id": {
+      "fakes": 6385,
+      "muons": 7858,
+      "found": 6924,
+      "fakes_per_event": 1.277,
+      "muons_per_event": 1.5716,
+      "efficiency": 0.8299172959367134
+    }
+  },
+  "seeds chain, ZMM+BsToMuMu, dev5": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 8983,
+      "muons": 10070,
+      "found": 7173,
+      "fakes_per_event": 1.7966,
+      "muons_per_event": 2.014,
+      "efficiency": 0.8597626752966558
+    },
+    "after_id": {
+      "fakes": 4260,
+      "muons": 7843,
+      "found": 6936,
+      "fakes_per_event": 0.852,
+      "muons_per_event": 1.5686,
+      "efficiency": 0.8313556274721323
+    }
+  },
+  "seeds chain, ZMM+BsToMuMu, dev6": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 2940,
+      "muons": 11834,
+      "found": 7253,
+      "fakes_per_event": 0.588,
+      "muons_per_event": 2.3668,
+      "efficiency": 0.8693515521994486
+    },
+    "after_id": {
+      "fakes": 1379,
+      "muons": 7923,
+      "found": 6982,
+      "fakes_per_event": 0.2758,
+      "muons_per_event": 1.5846,
+      "efficiency": 0.8368692316912382
+    }
+  },
+  "seeds chain, ZMM+BsToMuMu, v1": {
+    "events": 5000,
+    "generated": 8343,
+    "before_id": {
+      "fakes": 2635,
+      "muons": 12028,
+      "found": 7271,
+      "fakes_per_event": 0.527,
+      "muons_per_event": 2.4056,
+      "efficiency": 0.871509049502577
+    },
+    "after_id": {
+      "fakes": 1246,
+      "muons": 7935,
+      "found": 6996,
+      "fakes_per_event": 0.2492,
+      "muons_per_event": 1.587,
+      "efficiency": 0.8385472851492269
+    }
+  },
+  "seeds chain, TTbar, no selection": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 7097,
+      "muons": 2330,
+      "found": 1330,
+      "fakes_per_event": 2.8388,
+      "muons_per_event": 0.932,
+      "efficiency": 0.8843085106382979
+    },
+    "after_id": {
+      "fakes": 3201,
+      "muons": 1705,
+      "found": 1292,
+      "fakes_per_event": 1.2804,
+      "muons_per_event": 0.682,
+      "efficiency": 0.8590425531914894
+    }
+  },
+  "seeds chain, TTbar, dev5": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 4696,
+      "muons": 2747,
+      "found": 1331,
+      "fakes_per_event": 1.8784,
+      "muons_per_event": 1.0988,
+      "efficiency": 0.8849734042553191
+    },
+    "after_id": {
+      "fakes": 2257,
+      "muons": 1703,
+      "found": 1303,
+      "fakes_per_event": 0.9028,
+      "muons_per_event": 0.6812,
+      "efficiency": 0.8663563829787234
+    }
+  },
+  "seeds chain, TTbar, dev6": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 1720,
+      "muons": 3660,
+      "found": 1340,
+      "fakes_per_event": 0.688,
+      "muons_per_event": 1.464,
+      "efficiency": 0.8909574468085106
+    },
+    "after_id": {
+      "fakes": 823,
+      "muons": 1721,
+      "found": 1305,
+      "fakes_per_event": 0.3292,
+      "muons_per_event": 0.6884,
+      "efficiency": 0.867686170212766
+    }
+  },
+  "seeds chain, TTbar, v1": {
+    "events": 2500,
+    "generated": 1504,
+    "before_id": {
+      "fakes": 1566,
+      "muons": 3751,
+      "found": 1342,
+      "fakes_per_event": 0.6264,
+      "muons_per_event": 1.5004,
+      "efficiency": 0.8922872340425532
+    },
+    "after_id": {
+      "fakes": 742,
+      "muons": 1723,
+      "found": 1309,
+      "fakes_per_event": 0.2968,
+      "muons_per_event": 0.6892,
+      "efficiency": 0.870345744680851
+    }
+  }
+}

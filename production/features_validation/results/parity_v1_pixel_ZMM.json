@@ -1,0 +1,308 @@
+[
+  {
+    "selector": "IO pixel (hltPhase2MuonPixelTracksHighPurityForest)",
+    "model_dir": "production/io/pixel",
+    "bin_md5": "042a283f9006688ab25a7fbe82ccc77b",
+    "tracks_matched": 10524,
+    "only_in_python": 7,
+    "only_in_cmssw": 0,
+    "signal_tracks": 3920,
+    "features_max_abs_diff": 0.0,
+    "features_exact_fraction": 1.0,
+    "per_feature": {
+      "muon_pixel_tracks_p": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_dzErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_qoverpErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_sigmaPtOverPt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_sip2D": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_absEta": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_etaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "muon_pixel_tracks_phiErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "L1TkMu_nStubs_Endcap": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_ME0": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_St2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_St3": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_St4": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_GE11": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_GE21": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_RPC1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_RPC2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_RPC3": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend_RPC4": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_ME0": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_St2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_St3": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_St4": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_GE11": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_GE21": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_RPC1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_RPC2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_RPC3": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta_RPC4": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff_ME0": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff_St2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff_St3": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff_St4": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend2_ME0": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend2_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend2_GE11": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bend2_GE21": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta2_ME0": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta2_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta2_GE11": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_dEta2_GE21": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "cm_bendDiff2_St1": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      }
+    },
+    "score_max_abs_diff_vs_python_model": 1.4901161193847656e-07,
+    "score_max_abs_diff_vs_bin_replay_on_cpp_features": 1.1920928955078125e-07,
+    "decision_differences_vs_python": 0,
+    "selected_cmssw": 4480
+  },
+  {
+    "selector": "OI pixel (hltPhase2L3OIMuonTrackSelectionHighPurity)",
+    "model_dir": "production/oi/pixel",
+    "bin_md5": "e7fc5a9252172034f9df2707d108e24d",
+    "tracks_matched": 5120,
+    "only_in_python": 0,
+    "only_in_cmssw": 0,
+    "signal_tracks": 259,
+    "features_max_abs_diff": 0.0,
+    "features_exact_fraction": 1.0,
+    "per_feature": {
+      "l3_tk_OI_p": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_normalizedChi2": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_etaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_phiErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dszErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dxyErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_dzErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_qoverpErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_lambdaErr": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_eta": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nPixelHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nTrkLays": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nFoundHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_nLostHits": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_impact3D": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_impactSignificance": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_chi2PerHit": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l3_tk_OI_hitEfficiency": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l2_mu_vtx_hasMatch": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "l2_mu_vtx_matchingScore": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      },
+      "is_low_pt": {
+        "max_abs_diff": 0.0,
+        "exact_fraction": 1.0
+      }
+    },
+    "score_max_abs_diff_vs_python_model": 1.1920928955078125e-07,
+    "score_max_abs_diff_vs_bin_replay_on_cpp_features": 1.1920928955078125e-07,
+    "decision_differences_vs_python": 0,
+    "selected_cmssw": 549
+  }
+]

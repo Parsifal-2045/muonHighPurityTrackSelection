@@ -1,0 +1,164 @@
+{
+  "seeds_xgb_output_33f_dev5": {
+    "model": "production/io/archive/seeds_xgb_output_33f_dev5",
+    "n_features": 33,
+    "trees": 2000,
+    "roc_auc": 0.9402009483523474,
+    "fakes_per_event_in": 5.9384,
+    "fakes_per_event": 3.434,
+    "recall": 0.9753777280358142,
+    "recall_signal_muons": 0.9984544049459042,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 2.3588,
+        "recall": 0.893687707641196,
+        "recall_signal_muons": 0.9714285714285714
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.554,
+        "recall": 0.9538461538461539,
+        "recall_signal_muons": 0.990990990990991
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.2948,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.2056,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.0204,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0004,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      }
+    ]
+  },
+  "seeds_xgb_output_46f_dev6": {
+    "model": "production/io/archive/seeds_xgb_output_46f_dev6",
+    "n_features": 46,
+    "trees": 600,
+    "roc_auc": 0.9885402273262347,
+    "fakes_per_event_in": 5.9384,
+    "fakes_per_event": 0.4284,
+    "recall": 0.9692221600447678,
+    "recall_signal_muons": 0.98145285935085,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 0.292,
+        "recall": 0.9102990033222591,
+        "recall_signal_muons": 0.9714285714285714
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.0952,
+        "recall": 0.9807692307692307,
+        "recall_signal_muons": 0.9819819819819819
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.0264,
+        "recall": 0.9939577039274925,
+        "recall_signal_muons": 0.9925373134328358
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.0108,
+        "recall": 0.9687964338781575,
+        "recall_signal_muons": 0.9712121212121212
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.0036,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0004,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      }
+    ]
+  },
+  "seeds": {
+    "model": "production/io/seeds",
+    "n_features": 46,
+    "trees": 400,
+    "roc_auc": 0.9881964441347884,
+    "fakes_per_event_in": 5.9384,
+    "fakes_per_event": 0.394,
+    "recall": 0.974258533855624,
+    "recall_signal_muons": 0.9899536321483772,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 0.2684,
+        "recall": 0.9069767441860465,
+        "recall_signal_muons": 0.9714285714285714
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.0812,
+        "recall": 0.9692307692307692,
+        "recall_signal_muons": 0.972972972972973
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.0268,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.012,
+        "recall": 0.9851411589895989,
+        "recall_signal_muons": 0.9863636363636363
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.0052,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0004,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      }
+    ]
+  }
+}

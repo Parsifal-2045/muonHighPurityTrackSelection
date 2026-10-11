@@ -1,0 +1,164 @@
+{
+  "seeds_xgb_output_33f_dev5": {
+    "model": "production/io/archive/seeds_xgb_output_33f_dev5",
+    "n_features": 33,
+    "trees": 2000,
+    "roc_auc": 0.9729588672680178,
+    "fakes_per_event_in": 5.818,
+    "fakes_per_event": 3.0756,
+    "recall": 0.9850104435434328,
+    "recall_signal_muons": 0.9963204075856212,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 2.4144,
+        "recall": 0.9123343527013251,
+        "recall_signal_muons": 0.9819121447028424
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.5316,
+        "recall": 0.9789227166276346,
+        "recall_signal_muons": 0.9862018881626725
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.1166,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.0108,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.002,
+        "recall": 1.0,
+        "recall_signal_muons": 1.0
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0002,
+        "recall": null,
+        "recall_signal_muons": null
+      }
+    ]
+  },
+  "seeds_xgb_output_46f_dev6": {
+    "model": "production/io/archive/seeds_xgb_output_46f_dev6",
+    "n_features": 46,
+    "trees": 600,
+    "roc_auc": 0.9948649181624314,
+    "fakes_per_event_in": 5.818,
+    "fakes_per_event": 0.379,
+    "recall": 0.9832903305074333,
+    "recall_signal_muons": 0.990376450608548,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 0.2888,
+        "recall": 0.9398572884811417,
+        "recall_signal_muons": 0.9767441860465116
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.0818,
+        "recall": 0.9818501170960188,
+        "recall_signal_muons": 0.9876543209876543
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.008,
+        "recall": 0.9880239520958084,
+        "recall_signal_muons": 0.9898477157360406
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.0002,
+        "recall": 0.9923339011925043,
+        "recall_signal_muons": 0.992283509574164
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.0002,
+        "recall": 0.9976470588235294,
+        "recall_signal_muons": 0.9976415094339622
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0,
+        "recall": null,
+        "recall_signal_muons": null
+      }
+    ]
+  },
+  "seeds": {
+    "model": "production/io/seeds",
+    "n_features": 46,
+    "trees": 400,
+    "roc_auc": 0.9949456675143901,
+    "fakes_per_event_in": 5.818,
+    "fakes_per_event": 0.342,
+    "recall": 0.9835360609411475,
+    "recall_signal_muons": 0.9924992923860742,
+    "per_bin": [
+      {
+        "lo": 0.0,
+        "hi": 3.0,
+        "fakes_per_event": 0.2562,
+        "recall": 0.9276248725790011,
+        "recall_signal_muons": 0.9767441860465116
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "fakes_per_event": 0.0768,
+        "recall": 0.977751756440281,
+        "recall_signal_muons": 0.9840232389251997
+      },
+      {
+        "lo": 5.0,
+        "hi": 10.0,
+        "fakes_per_event": 0.0086,
+        "recall": 0.9933466400532269,
+        "recall_signal_muons": 0.9949238578680203
+      },
+      {
+        "lo": 10.0,
+        "hi": 50.0,
+        "fakes_per_event": 0.0002,
+        "recall": 0.9960249858035207,
+        "recall_signal_muons": 0.9959988568162332
+      },
+      {
+        "lo": 50.0,
+        "hi": 200.0,
+        "fakes_per_event": 0.0002,
+        "recall": 0.9976470588235294,
+        "recall_signal_muons": 0.9976415094339622
+      },
+      {
+        "lo": 200.0,
+        "hi": null,
+        "fakes_per_event": 0.0,
+        "recall": null,
+        "recall_signal_muons": null
+      }
+    ]
+  }
+}

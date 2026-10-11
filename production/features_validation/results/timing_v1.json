@@ -1,0 +1,101 @@
+{
+ "note": "CMSSW_20_1_0_pre3 with the L1 tracker muons re-emulated, pre3 D128 RelVals at 200 PU, 2500 events per chain and sample. ms per event: TimeReport per-event real time of the timing clones of the selectors (no feature dump), 8-thread jobs on CPU sharing an oversubscribed node (6 to 12 jobs, trainings): compare the generations loosely, they did not run at the same time.",
+ "ms_per_event": {
+  "v1": {
+   "pixel_ZMM": {
+    "event_loop_real_s_per_event": 3.33,
+    "IO": 1.202,
+    "OI": 0.023
+   },
+   "pixel_Bs": {
+    "event_loop_real_s_per_event": 3.31,
+    "IO": 1.245,
+    "OI": 0.025
+   },
+   "pixel_TTbar": {
+    "event_loop_real_s_per_event": 3.75,
+    "IO": 1.092,
+    "OI": 0.022
+   },
+   "seeds_ZMM": {
+    "event_loop_real_s_per_event": 3.32,
+    "IO": 1.386,
+    "OI": 0.022
+   },
+   "seeds_Bs": {
+    "event_loop_real_s_per_event": 3.31,
+    "IO": 1.518,
+    "OI": 0.024
+   },
+   "seeds_TTbar": {
+    "event_loop_real_s_per_event": 3.76,
+    "IO": 1.277,
+    "OI": 0.022
+   }
+  },
+  "dev6": {
+   "pixel_ZMM": {
+    "event_loop_real_s_per_event": 4.19,
+    "IO": 1.546,
+    "OI": 0.051
+   },
+   "pixel_Bs": {
+    "event_loop_real_s_per_event": 4.16,
+    "IO": 1.6,
+    "OI": 0.058
+   },
+   "pixel_TTbar": {
+    "event_loop_real_s_per_event": 4.65,
+    "IO": 1.443,
+    "OI": 0.054
+   },
+   "seeds_ZMM": {
+    "event_loop_real_s_per_event": 4.19,
+    "IO": 2.114,
+    "OI": 0.092
+   },
+   "seeds_Bs": {
+    "event_loop_real_s_per_event": 4.16,
+    "IO": 2.248,
+    "OI": 0.103
+   },
+   "seeds_TTbar": {
+    "event_loop_real_s_per_event": 4.65,
+    "IO": 1.903,
+    "OI": 0.097
+   }
+  },
+  "dev5": {
+   "pixel_ZMM": {
+    "event_loop_real_s_per_event": 3.5,
+    "IO": 0.216,
+    "OI": 0.031
+   },
+   "pixel_Bs": {
+    "event_loop_real_s_per_event": 3.56,
+    "IO": 0.223,
+    "OI": 0.036
+   },
+   "pixel_TTbar": {
+    "event_loop_real_s_per_event": 3.98,
+    "IO": 0.18,
+    "OI": 0.033
+   },
+   "seeds_ZMM": {
+    "event_loop_real_s_per_event": 3.49,
+    "IO": 0.322,
+    "OI": 0.021
+   },
+   "seeds_Bs": {
+    "event_loop_real_s_per_event": 3.57,
+    "IO": 0.34,
+    "OI": 0.022
+   },
+   "seeds_TTbar": {
+    "event_loop_real_s_per_event": 3.97,
+    "IO": 0.294,
+    "OI": 0.022
+   }
+  }
+ }
+}
