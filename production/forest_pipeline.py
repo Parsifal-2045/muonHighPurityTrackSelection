@@ -38,6 +38,7 @@ IO seeds / OI general.
 Usage (via a flavour script):
     python pixel_xgb.py --data-dir DIR [--cache-dir DIR] [--output-dir DIR] [--force]
                         [--device cpu|cuda] [--set key=json_value ...] [--no-permutation-importance]
+                        [--wp-files FILE ...]
 """
 
 import argparse
@@ -45,6 +46,7 @@ import gc
 import getpass
 import hashlib
 import importlib.metadata
+import multiprocessing
 import inspect
 import json
 import os
@@ -73,14 +75,16 @@ PROD_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_DIR = os.path.dirname(PROD_DIR)
 
 # Modules whose attributes count as feature-extraction code for the cache key
-_FEATURE_MODULES = ("pixel_features", "OI_features")
+_FEATURE_MODULES = ("pixel_features", "OI_features", "chamber_match")
 # Their files at startup: the cache key hashes the source read from disk, which
 # must be the code this process runs (see feature_code_fingerprint).
 _FEATURE_FILES = {p: os.stat(p).st_mtime_ns for p in (
-    os.path.join(PROD_DIR, "pixel_features.py"), os.path.join(PROD_DIR, "oi", "OI_features.py"))}
+    os.path.join(PROD_DIR, "pixel_features.py"), os.path.join(PROD_DIR, "oi", "OI_features.py"),
+    os.path.join(PROD_DIR, "chamber_match.py"))}
 
 # .bin verification: random test rows replayed through the CMSSW traversal,
 # plus every test row whose score lies within this window of its threshold.
+FEATURE_CHUNK_EVENTS = 20_000   # events per chunk of the feature builder (memory)
 VERIFY_N_RANDOM = 300_000
 VERIFY_THR_WINDOW = 0.02
 VERIFY_TOL = 1e-5
@@ -88,14 +92,14 @@ VERIFY_TOL = 1e-5
 DEFAULTS = dict(
     # Sample weights
     signal_boost=pf.SIGNAL_BOOST,
-    kin_weight_max=pf.KIN_WEIGHT_MAX,
-    # XGBoost hyperparameters. Depth 12 / learning rate 0.2 (v3) from the
-    # validation-only scan (tuning/forest_scan.py, tuning/results/): at equal
-    # CMSSW inference cost it beats the v2 depth-6 / 0.1 forests by +0.003
-    # (IO pixel) and +0.008 (IO seeds) in validation F2, confirmed on a second
-    # validation fold, and the size selection keeps 4-6x fewer trees.
-    max_depth=12,
-    learning_rate=0.2,
+    kin_weight_max=1.0,    # no 1/pT weighting (pf.KIN_WEIGHT_MAX = 20 was used up to dev3)
+    # XGBoost hyperparameters. Shallow, regularised forests: with a copy-aware
+    # split (see split_mode) and on independent RelVal events, depth 3-6 forests
+    # trained on deduplicated, jittered features keep fewer fakes at fixed recall
+    # than the deep forests that looked best on the event-level split (those
+    # memorised the recurring pileup tracks).
+    max_depth=4,
+    learning_rate=0.1,
     subsample=0.8,
     colsample_bytree=0.8,
     min_child_weight=1.0,
@@ -104,19 +108,53 @@ DEFAULTS = dict(
     max_bin=256,
     seed=42,
     # Tree budget + size selection on validation (no early stopping)
-    n_estimators=5000,
-    prune_tol=0.001,       # val-F2 tolerance for the size selection
-    prune_grid_step=50,    # prefix grid spacing [trees]
+    n_estimators=2000,
+    prune_tol=0.005,       # tolerance on the validation figure of merit for the size selection
+    prune_grid_step=100,   # prefix grid spacing [trees]
     prune_min_trees=100,   # smallest prefix considered
     device="cuda",         # "cuda" falls back to CPU (loudly) if unavailable
-    # Event-level split
-    split_mode="evt10",
+    feature_workers=1,     # processes of the feature builder, one input file each (results do not depend on it)
+    nthread=None,          # XGBoost threads (None: the CPUs this process may use; a container may see more than it may use)
+    # Split. "evt10": event-level (ev % 10 -> train 60 / val 10 / test 30).
+    # "copygroup": the pileup is mixed from a finite MinBias pool, so the same
+    # pileup track recurs in many events (bit-identical or nearly so) and an
+    # event-level split leaks: the forest memorises the copies and the test
+    # metrics are inflated. Tracks are grouped by copy_group_features rounded
+    # to copy_group_decimals, and whole groups go to one split (same 60/10/30).
+    # dedup_copies drops bit-identical tracks from the whole sample before the split (one copy is kept):
+    # repeated copies carry no information and distort every per-track fraction.
+    split_mode="copygroup",
     split_seed_offset=0,
+    copy_group_features=None,   # set per flavour: [pT, eta, nPixelHits] feature names
+    copy_group_decimals=2,
+    dedup_copies=True,
+    # Gaussian jitter of the continuous training features, in units of each
+    # feature's standard deviation (0 = off): stops the trees from keying on
+    # the exact values of recurring pileup tracks.
+    train_jitter=0.3,
+    # Working points. "f2": F2-optimal threshold per pT bin. "recall": the
+    # threshold of each pT bin keeps wp_recall_targets[bin] of the validation
+    # muons of that bin (global threshold: wp_recall_global of all muons); the
+    # forest size is then chosen on the validation fake rejection at these points.
+    wp_mode="recall",
+    # pT bins [0,3) [3,5) [5,10) [10,50) [50,200) [200,inf). The fakes are concentrated below 5 GeV (on
+    # RelVal events 98% of them), so above 5 GeV every track is kept (target 1.0 = open threshold): a recall
+    # quantile there sits at scores of 0.999+ and costs genuine muons for a handful of fakes.
+    wp_recall_targets=[0.96, 0.99, 1.0, 1.0, 1.0, 1.0],
+    wp_recall_global=0.99,
     # pT-binned working points [GeV]: one F2 set point per bin, last bin
     # open-ended; bins with < min_bin_signal validation signal tracks (or
     # without background) fall back to the global F2 threshold.
-    pt_threshold_edges=[0.0, 2.0, 5.0, 10.0, 50.0, 200.0],
+    pt_threshold_edges=[0.0, 3.0, 5.0, 10.0, 50.0, 200.0],
     min_bin_signal=100,
+    # Working points pinned on independent events (--wp-files: n-tuples of the same chain, e.g. RelVal samples).
+    # The muons of the training sample (guns, Bs) are not distributed like those of physics samples, so a
+    # threshold set on them does not give exactly the target recall there. Where the independent events have
+    # enough reference muons, the threshold of a pT bin is the recall-target quantile of THEIR muons; the bins
+    # they do not populate keep the validation threshold. Enough = at least wp_files_min_rejected muons below
+    # the threshold: the precision of a quantile is set by the number of muons beyond it.
+    wp_files=None,
+    wp_files_min_rejected=10,
     # Exports. fp16 .bin values accumulate ~0.2 score error over thousands of
     # trees: too lossy for a fixed-threshold selector, keep fp32.
     onnx_opset=pf.ONNX_OPSET,
@@ -129,9 +167,10 @@ DEFAULTS = dict(
     # Model generation: fills "{version}" in the flavours' cmssw_bin (deployed
     # file names, which must change with every deployed retraining: cms-data
     # files are immutable) and "{ref_version}" in their ref_model_path (the
-    # previous production forests, archived under */archive/).
-    model_version="v3",
-    ref_version="v2",
+    # previous forests, archived under */archive/). v1 is the first deployed
+    # generation; its reference is the last development generation (dev6).
+    model_version="v1",
+    ref_version="dev6",
 )
 
 
@@ -238,6 +277,9 @@ def feature_cache_key(cfg, files):
         dict(
             code=feature_code_fingerprint(cfg["build"]),
             build_kwargs=cfg.get("build_kwargs", {}),
+            # files named in the build arguments (RPC roll geometry) count by content
+            build_files={k: _md5(v) for k, v in cfg.get("build_kwargs", {}).items()
+                         if isinstance(v, str) and os.path.isfile(v)},
             branches=cfg["branches"],
             files=manifest,
             packages={m: importlib.metadata.version(m) for m in ("numpy", "awkward", "uproot")},
@@ -249,6 +291,23 @@ def feature_cache_key(cfg, files):
 
 def cache_dir(cfg):
     return cfg.get("cache_dir") or DEFAULT_CACHE_DIR
+
+
+def _file_features(job):
+    """Features of one input file, read in chunks of events (worker of load_features)."""
+    path, index, branches, build, build_kwargs = job
+    t0 = time.time()
+    X_l, y_l, fl_l, ev_l, names, ne = [], [], [], [], None, 0
+    with uproot.open(path) as rf:
+        for a in rf[pf.MAIN_BRANCH].iterate(branches, step_size=FEATURE_CHUNK_EVENTS):
+            n = len(a)
+            Xc, yc, lc, ec, names = build(a, np.full(n, index), event_ids=np.arange(ne, ne + n, dtype=np.int64),
+                                          **build_kwargs)
+            X_l.append(Xc); y_l.append(yc); fl_l.append(lc); ev_l.append(ec)
+            ne += n
+            del a
+    return (np.concatenate(X_l), np.concatenate(y_l), np.concatenate(fl_l), np.concatenate(ev_l), names, ne,
+            time.time() - t0)
 
 
 def load_features(cfg):
@@ -275,24 +334,23 @@ def load_features(cfg):
     print(f"Building features from {len(files)} input files (cache key {key[:16]}):")
     X_l, y_l, fl_l, ev_l, names = [], [], [], [], None
     total_ev = 0
-    for i, f in enumerate(files):
-        t0 = time.time()
-        with uproot.open(f) as rf:
-            a = rf[pf.MAIN_BRANCH].arrays(cfg["branches"])
-        ne = len(a)
-        total_ev += ne
-        Xc, yc, lc, ec, fn = cfg["build"](
-            a, np.full(ne, i), event_ids=np.arange(ne, dtype=np.int64), **cfg.get("build_kwargs", {})
-        )
-        if names is None:
-            names = fn
-        elif fn != names:
-            raise RuntimeError(f"feature names differ between input files ({f})")
-        X_l.append(Xc); y_l.append(yc); fl_l.append(lc); ev_l.append(ec)
-        print(f"  [{i + 1:2d}/{len(files)}] {os.path.basename(f)}: {ne} events, "
-              f"{len(yc)} tracks ({time.time() - t0:.0f}s)", flush=True)
-        del a
-        gc.collect()
+    jobs = [(f, i, cfg["branches"], cfg["build"], cfg.get("build_kwargs", {})) for i, f in enumerate(files)]
+    workers = max(1, min(int(cfg.get("feature_workers", 1)), len(files), onnx_utils.available_cpus()))
+    pool = multiprocessing.Pool(workers) if workers > 1 else None
+    try:
+        for i, (Xc, yc, lc, ec, fn, ne, dt) in enumerate(pool.imap(_file_features, jobs) if pool else map(_file_features, jobs)):
+            total_ev += ne
+            if names is None:
+                names = fn
+            elif fn != names:
+                raise RuntimeError(f"feature names differ between input files ({files[i]})")
+            X_l.append(Xc); y_l.append(yc); fl_l.append(lc); ev_l.append(ec)
+            print(f"  [{i + 1:2d}/{len(files)}] {os.path.basename(files[i])}: {ne} events, "
+                  f"{len(yc)} tracks ({dt:.0f}s)", flush=True)
+    finally:
+        if pool:
+            pool.close()
+            pool.join()
     X = np.concatenate(X_l); y = np.concatenate(y_l)
     fl = np.concatenate(fl_l).astype(np.int32); ev = np.concatenate(ev_l)
     print(f"  Total: {total_ev} events, {X.shape[0]} tracks x {X.shape[1]} features")
@@ -305,8 +363,13 @@ def load_features(cfg):
 
 
 def select_features(X, names, drop, expected):
-    """Drop features by name; the result must equal `expected` (the CMSSW
-    extractor order) exactly."""
+    """The production features. drop=None: the columns `expected`, in that order (the CMSSW extractor order).
+    Otherwise drop features by name; the result must equal `expected` exactly."""
+    if drop is None:
+        missing = [f for f in expected if f not in names]
+        if missing:
+            raise ValueError(f"production features not produced by the feature builder: {missing}")
+        return X[:, [names.index(f) for f in expected]], list(expected)
     unknown = [f for f in drop if f not in names]
     if unknown:
         raise ValueError(f"drop_features not produced by build_dataset: {unknown}")
@@ -324,6 +387,26 @@ def select_features(X, names, drop, expected):
 # --------------------------------------------------------------------------- #
 # Training
 # --------------------------------------------------------------------------- #
+def row_keys(T):
+    """64-bit key of every row of a float32 matrix (bit pattern of all columns)."""
+    v = np.ascontiguousarray(T.astype(np.float32)).view(np.uint32).astype(np.uint64)
+    k = np.zeros(len(v), dtype=np.uint64)
+    for j in range(v.shape[1]):
+        k = k * np.uint64(1000003) + v[:, j]
+    return k
+
+
+def copy_group_split(X, names, cfg):
+    """Train/val/test masks (60/10/30) that keep copies of a recurring track together:
+    tracks sharing the rounded copy_group_features form a group, groups are assigned by hash."""
+    cols = [names.index(n) for n in cfg["copy_group_features"]]
+    grp = row_keys(np.round(X[:, cols], cfg["copy_group_decimals"]))
+    m = ((grp * np.uint64(2654435761)) >> np.uint64(7)) % np.uint64(10)
+    off = np.uint64(cfg["split_seed_offset"] % 10)
+    m = (m + off) % np.uint64(10)
+    return (m >= 4), (m == 3), (m < 3)
+
+
 def xgb_params(cfg):
     return dict(
         objective="binary:logistic",
@@ -338,14 +421,16 @@ def xgb_params(cfg):
         reg_lambda=cfg["reg_lambda"],
         max_bin=cfg["max_bin"],
         seed=cfg["seed"],
+        nthread=cfg.get("nthread") or onnx_utils.available_cpus(),
     )
 
 
 def train_forest(cfg, X_tr, y_tr, w_tr, X_va, y_va, w_va, n_rounds=None, verbose_eval=None):
     """Train on the host-sketched QuantileDMatrix (bit-reproducible on GPU).
     Returns (booster, device_used, evals_result)."""
-    dtrain = xgb.QuantileDMatrix(X_tr, label=y_tr, weight=w_tr, max_bin=cfg["max_bin"])
-    dval = xgb.QuantileDMatrix(X_va, label=y_va, weight=w_va, ref=dtrain, max_bin=cfg["max_bin"])
+    nthread = cfg.get("nthread") or onnx_utils.available_cpus()
+    dtrain = xgb.QuantileDMatrix(X_tr, label=y_tr, weight=w_tr, max_bin=cfg["max_bin"], nthread=nthread)
+    dval = xgb.QuantileDMatrix(X_va, label=y_va, weight=w_va, ref=dtrain, max_bin=cfg["max_bin"], nthread=nthread)
     n_rounds = n_rounds or cfg["n_estimators"]
     verbose_eval = cfg["verbose_eval"] if verbose_eval is None else verbose_eval
     device = cfg["device"]
@@ -390,21 +475,101 @@ def prefix_margins(bst, X, grid, step):
     return out
 
 
-def val_f2_at_binned_wp(y_val, scores, pt_val, cfg):
-    wp = pf.find_f2_threshold_binned(y_val, scores, pt_val, cfg["pt_threshold_edges"], cfg["min_bin_signal"])
+def working_points(y_val, scores, pt_val, cfg, ref=None):
+    """Per-pT-bin thresholds from the validation split, in the format of
+    pf.find_f2_threshold_binned: {"global_f1", "global_f2", "bins": [(lo, hi, thr, n_sig, n, fell_back)]}
+    ("global_f2" is the global threshold of the active mode). ref (bool per track, wp_mode "recall"): the muons
+    on which the recall targets are defined (default: every signal track)."""
+    if cfg["wp_mode"] == "f2":
+        return pf.find_f2_threshold_binned(y_val, scores, pt_val, cfg["pt_threshold_edges"], cfg["min_bin_signal"])
+    if cfg["wp_mode"] != "recall":
+        raise ValueError(f"unknown wp_mode {cfg['wp_mode']}")
+    bins = pf.pt_bins_from_edges(cfg["pt_threshold_edges"])
+    targets = list(cfg["wp_recall_targets"])
+    if len(targets) != len(bins):
+        raise ValueError(f"{len(targets)} wp_recall_targets for {len(bins)} pT bins")
+    is_ref = (y_val == 1) if ref is None else ((y_val == 1) & ref)
+    g = float(np.quantile(scores[is_ref], 1.0 - cfg["wp_recall_global"]))
+    out = []
+    for (lo, hi), r in zip(bins, targets):
+        m = (pt_val >= lo) & (pt_val < hi)
+        n_sig = int(is_ref[m].sum())
+        if r >= 1.0:
+            out.append((lo, hi, 0.0, n_sig, int(m.sum()), False))   # open: every track of the bin is kept
+        elif n_sig >= cfg["min_bin_signal"]:
+            out.append((lo, hi, float(np.quantile(scores[m & is_ref], 1.0 - r)), n_sig, int(m.sum()), False))
+        else:
+            out.append((lo, hi, g, n_sig, int(m.sum()), True))
+    return {"global_f1": g, "global_f2": g, "bins": out}
+
+
+def independent_features(cfg, names):
+    """(X [names], y, reference-muon flag or None, pT) of the tracks of cfg["wp_files"], built like the training
+    features."""
+    jobs = [(f, i, cfg["branches"], cfg["build"], cfg.get("build_kwargs", {})) for i, f in enumerate(cfg["wp_files"])]
+    workers = max(1, min(int(cfg.get("feature_workers", 1)), len(jobs), onnx_utils.available_cpus()))
+    if workers > 1:
+        with multiprocessing.Pool(workers) as pool:
+            parts = pool.map(_file_features, jobs)
+    else:
+        parts = [_file_features(j) for j in jobs]
+    X = np.concatenate([p[0] for p in parts])
+    y = np.concatenate([p[1] for p in parts])
+    built = parts[0][4]
+    ref = X[:, built.index(cfg["wp_signal_feature"])] > 0.5 if cfg.get("wp_signal_feature") else None
+    X, sel = select_features(X, built, cfg["drop_features"], cfg.get("production_features"))
+    if sel != names:
+        raise ValueError("the features of the --wp-files differ from those of the training sample")
+    return X, y, ref, 10 ** X[:, names.index(cfg["pt_feature"])]
+
+
+def pin_working_points(wp, scores, y, ref, pt, cfg):
+    """Thresholds of working_points() with those of the pT bins that the independent events populate replaced by
+    the recall-target quantiles of their reference muons. Returns (thresholds, per-bin records)."""
+    is_ref = (y == 1) if ref is None else ((y == 1) & ref)
+    thrs, rec = [], []
+    for (lo, hi, thr, _, _, _), r in zip(wp["bins"], cfg["wp_recall_targets"]):
+        m = is_ref & (pt >= lo) & (pt < hi)
+        n = int(m.sum())
+        pinned = r < 1.0 and n * (1.0 - r) >= cfg["wp_files_min_rejected"]
+        new = float(np.quantile(scores[m], 1.0 - r)) if pinned else float(thr)
+        rec.append(dict(lo=lo, hi=None if not np.isfinite(hi) else hi, reference_muons=n, pinned=bool(pinned),
+                        validation_threshold=float(thr), threshold=new,
+                        recall_at_validation_threshold=float((scores[m] >= thr).mean()) if n else None))
+        thrs.append(new)
+    return thrs, rec
+
+
+def pinning_lines(wp_pinning):
+    """Text record (thresholds.txt) of the working points pinned on independent events."""
+    out = [f"pT-bin working points pinned on {len(wp_pinning['files'])} files of independent events "
+           f"(bins with at least {wp_pinning['min_rejected']} reference muons below the threshold):\n"]
+    for b in wp_pinning["bins"]:
+        hi_s = "inf" if b["hi"] is None else f"{b['hi']:.1f}"
+        out.append(f"  pT [{b['lo']:.1f}, {hi_s}): thr={b['threshold']:.6f}  n_ref={b['reference_muons']}"
+                   + ("\n" if b["pinned"] else "  [validation threshold kept]\n"))
+    return out
+
+
+def val_f2_at_binned_wp(y_val, scores, pt_val, cfg, ref=None):
+    """Validation figure of merit at the validation-chosen working points:
+    F2 (wp_mode "f2") or fake rejection (wp_mode "recall")."""
+    wp = working_points(y_val, scores, pt_val, cfg, ref)
     dec = pf.apply_binned_thresholds(scores, pt_val, cfg["pt_threshold_edges"], [b[2] for b in wp["bins"]])
     tn, fp, fn, tp = confusion_matrix(y_val, dec, labels=[0, 1]).ravel()
+    if cfg["wp_mode"] == "recall":
+        return tn / max(tn + fp, 1)
     return pf.calculate_metrics((tp, fp, fn, tn))[4]
 
 
-def size_curve(bst, X_val, y_val, pt_val, cfg):
+def size_curve(bst, X_val, y_val, pt_val, cfg, ref=None):
     """[(n_trees, val F2 at the val-chosen per-bin WPs)] on the prune grid."""
     n_fit = bst.num_boosted_rounds()
     step = cfg["prune_grid_step"]
     g0 = step * max(1, int(np.ceil(cfg["prune_min_trees"] / step)))
     grid = sorted(set(range(g0, n_fit, step)) | {n_fit})
     margins = prefix_margins(bst, X_val, grid, step)
-    return [(n, val_f2_at_binned_wp(y_val, 1.0 / (1.0 + np.exp(-margins[n])), pt_val, cfg)) for n in grid]
+    return [(n, val_f2_at_binned_wp(y_val, 1.0 / (1.0 + np.exp(-margins[n])), pt_val, cfg, ref)) for n in grid]
 
 
 def choose_size(curve, tol):
@@ -424,8 +589,9 @@ def choose_size(curve, tol):
 #   int32 roots[nTrees]
 # Traversal: while feat[node] >= 0: node = x[feat] < val ? left : right;
 # margin += val[leaf]; score = sigmoid(margin). Missing values (NaN) fail
-# every `<` and go right, which equals XGBoost's behaviour only if no node
-# has default_left set: the exporter asserts it.
+# every `<` and go right, which equals XGBoost's behaviour only if no split
+# node has default_left set: the exporter asserts it (the flag of a leaf has
+# no meaning and is ignored).
 def _flatten_tree(node_json, feat, val, left, right):
     """Append one tree (BFS, sequential child allocation); returns its root."""
     root = len(feat)
@@ -452,9 +618,9 @@ def _flatten_tree(node_json, feat, val, left, right):
 
 def forest_arrays(bst, fp16=False):
     raw = json.loads(bst.save_raw("json"))["learner"]["gradient_booster"]["model"]["trees"]
-    n_default_left = sum(sum(t["default_left"]) for t in raw)
+    n_default_left = sum(int(d) for t in raw for d, l in zip(t["default_left"], t["left_children"]) if l != -1)
     if n_default_left:
-        raise ValueError(f"{n_default_left} nodes route missing values left; the compact .bin "
+        raise ValueError(f"{n_default_left} split nodes route missing values left; the compact .bin "
                          "(NaN -> right) cannot represent this model")
     feat, val, left, right, roots = [], [], [], [], []
     for t in bst.get_dump(dump_format="json"):
@@ -497,9 +663,9 @@ def read_compact_bin(path):
     return dict(feat=feat, val=val, left=left, right=right, roots=roots, base_logit=np.float32(bl))
 
 
-def compact_forest_predict(forest, X):
-    """Scores exactly as the CMSSW forest selectors compute them (float32,
-    trees accumulated in file order), vectorised over rows."""
+def compact_forest_margin(forest, X):
+    """Margins exactly as the CMSSW forest selectors compute them (float32, starting from the base logit, trees
+    accumulated in file order), vectorised over rows."""
     X = np.ascontiguousarray(X, dtype=np.float32)
     n = X.shape[0]
     feat = forest["feat"].astype(np.int64)
@@ -516,7 +682,12 @@ def compact_forest_predict(forest, X):
             f[act] = feat[node[act]]
             act = act[f[act] >= 0]
         margin += val[node]
-    return (1.0 / (1.0 + np.exp(-margin))).astype(np.float32)
+    return margin
+
+
+def compact_forest_predict(forest, X):
+    """Scores exactly as the CMSSW forest selectors compute them: sigmoid of compact_forest_margin."""
+    return (1.0 / (1.0 + np.exp(-compact_forest_margin(forest, X)))).astype(np.float32)
 
 
 def verify_compact_bin(path, bst, X_test, pt_test, cfg, bin_edges, bin_thrs, seed=0):
@@ -534,12 +705,17 @@ def verify_compact_bin(path, bst, X_test, pt_test, cfg, bin_edges, bin_thrs, see
     t0 = time.time()
     s_bin = compact_forest_predict(forest, X_test[rows])
     diff = np.abs(s_bin - s_xgb[rows])
-    flips = int(np.sum((s_bin >= thr[rows]) != (s_xgb[rows] >= thr[rows])))
+    flipped = (s_bin >= thr[rows]) != (s_xgb[rows] >= thr[rows])
+    # a score within the float summation accuracy of its threshold is a tie, not a disagreement
+    # (recall-target thresholds sit on actual track scores, so exact ties occur)
+    tie = np.abs(s_xgb[rows] - thr[rows]) < VERIFY_TOL
+    flips = int(np.sum(flipped & ~tie))
     res = dict(rows_checked=int(len(rows)), near_threshold_rows=int(len(near)),
-               max_abs_diff=float(diff.max()), decision_flips=flips, seconds=round(time.time() - t0, 1))
+               max_abs_diff=float(diff.max()), decision_flips=flips, threshold_ties_flipped=int(np.sum(flipped & tie)),
+               seconds=round(time.time() - t0, 1))
     print(f"  .bin replay (CMSSW traversal) on {len(rows)} test rows "
           f"({len(near)} within {VERIFY_THR_WINDOW} of their WP): max|diff|={res['max_abs_diff']:.2e}, "
-          f"WP decision flips={flips} [{res['seconds']}s]")
+          f"WP decision flips={flips} (+{res['threshold_ties_flipped']} ties within {VERIFY_TOL:g} of the WP) [{res['seconds']}s]")
     if res["max_abs_diff"] >= VERIFY_TOL or flips:
         raise AssertionError(f".bin replay disagrees with XGBoost: {res}")
     return res
@@ -642,7 +818,7 @@ def rescore_reference(ref_path, X_val, y_val, pt_val, X_test, y_test, pt_test, c
     ref.load_model(ref_path)
     s_val = ref.predict(xgb.DMatrix(X_val))
     s_test = ref.predict(xgb.DMatrix(X_test))
-    wp = pf.find_f2_threshold_binned(y_val, s_val, pt_val, cfg["pt_threshold_edges"], cfg["min_bin_signal"])
+    wp = working_points(y_val, s_val, pt_val, cfg)
     dec = pf.apply_binned_thresholds(s_test, pt_test, cfg["pt_threshold_edges"], [b[2] for b in wp["bins"]])
     res = dict(path=rel(ref_path), trees=ref.num_boosted_rounds(),
                roc_auc=float(roc_auc_score(y_test, s_test)), pr_auc=float(average_precision_score(y_test, s_test)),
@@ -731,8 +907,11 @@ def _run(flavour_cfg, overrides, force):
     manifest["inputs"] = dict(data_dir=cfg["data_dir"], cache_key=cache_info["key"],
                               cache_path=cache_info["path"], cache_hit=cache_info["hit"],
                               files=[dict(path=p, size=s, mtime_ns=t) for p, s, t in cache_info["files"]])
+    # Muons the recall targets are defined on (a flag column of the feature builder, not a feature)
+    sig_ref = X[:, names.index(cfg["wp_signal_feature"])] > 0.5 if cfg.get("wp_signal_feature") else None
+    n_built = len(names)
     X, names = select_features(X, names, cfg["drop_features"], cfg.get("production_features"))
-    print(f"\nFeatures: {len(names)} (dropped {len(cfg['drop_features'])}); order matches the CMSSW extractor")
+    print(f"\nFeatures: {len(names)} of the {n_built} built; order matches the CMSSW extractor")
     print(f"  {names}")
     pt_idx = names.index(cfg["pt_feature"])
     n_nonfinite = int((~np.isfinite(X)).any(axis=1).sum())
@@ -746,8 +925,22 @@ def _run(flavour_cfg, overrides, force):
     print(f"\nSample weights: signal mean {weights[y == 1].mean():.3f}, background mean "
           f"{weights[y == 0].mean():.3f}; pT < {pf.LOW_PT_CUT:g} GeV tracks: "
           f"{100 * (pt_all < pf.LOW_PT_CUT).mean():.1f}%")
-    assert cfg["split_mode"] == "evt10", f"unknown split_mode {cfg['split_mode']}"
-    tr, va, te = pf.evt10_split(ev, seed_offset=cfg["split_seed_offset"])
+    keys = row_keys(X)
+    n_copies = len(keys) - len(np.unique(keys))
+    print(f"  {n_copies} of {len(keys)} tracks ({100 * n_copies / len(keys):.1f}%) are bit-identical copies of another track")
+    manifest["bit_identical_copies"] = dict(tracks=int(len(keys)), copies=int(n_copies))
+    if cfg["dedup_copies"]:
+        first = np.sort(np.unique(keys, return_index=True)[1])
+        X, y, fl, ev, weights, pt_all = X[first], y[first], fl[first], ev[first], weights[first], pt_all[first]
+        sig_ref = sig_ref[first] if sig_ref is not None else None
+        print(f"  dedup_copies: {len(first)} distinct tracks kept")
+    del keys
+    if cfg["split_mode"] == "evt10":
+        tr, va, te = pf.evt10_split(ev, seed_offset=cfg["split_seed_offset"])
+    elif cfg["split_mode"] == "copygroup":
+        tr, va, te = copy_group_split(X, names, cfg)
+    else:
+        raise ValueError(f"unknown split_mode {cfg['split_mode']}")
     split_info = {}
     for nm, m in (("train", tr), ("val", va), ("test", te)):
         n_evt = len(np.unique(fl[m].astype(np.int64) * (1 << 32) + ev[m]))
@@ -756,8 +949,17 @@ def _run(flavour_cfg, overrides, force):
               f"in {n_evt} events")
     manifest["split"] = split_info
     X_tr, y_tr, w_tr = X[tr], y[tr], weights[tr]
+    if cfg["train_jitter"] > 0:
+        cont = [j for j in range(X_tr.shape[1]) if len(np.unique(X_tr[:200000, j])) > 200]
+        rng = np.random.default_rng(cfg["seed"])
+        X_tr[:, cont] += rng.normal(0.0, 1.0, (len(X_tr), len(cont))).astype(np.float32) * (cfg["train_jitter"] * X_tr[:, cont].std(0))
+        print(f"  train_jitter {cfg['train_jitter']}: Gaussian noise on {len(cont)} continuous training features")
     X_va, y_va, w_va, pt_va = X[va], y[va], weights[va], pt_all[va]
     X_te, y_te, fl_te, pt_te = X[te], y[te].astype(np.int32), fl[te], pt_all[te]
+    ref_va, ref_te = (sig_ref[va], sig_ref[te]) if sig_ref is not None else (None, None)
+    if sig_ref is not None:
+        print(f"  recall targets defined on the {cfg['wp_signal_feature']} tracks: "
+              f"{int(sig_ref.sum())} of {int(y.sum())} signal tracks ({int(ref_va.sum())} in validation)")
     del X, weights, tr, va, te
     gc.collect()
 
@@ -774,11 +976,13 @@ def _run(flavour_cfg, overrides, force):
     gc.collect()
 
     # ---- Size selection (validation) ------------------------------------- #
-    print("\n" + "=" * 70 + "\nFOREST SIZE (validation F2 at validation-chosen per-bin WPs)\n" + "=" * 70)
-    curve = size_curve(bst, X_va, y_va, pt_va, cfg)
+    fom = "F2" if cfg["wp_mode"] == "f2" else "fake rejection"
+    wpl = "F2" if cfg["wp_mode"] == "f2" else "recall-target"
+    print("\n" + "=" * 70 + f"\nFOREST SIZE (validation {fom} at validation-chosen per-bin WPs)\n" + "=" * 70)
+    curve = size_curve(bst, X_va, y_va, pt_va, cfg, ref_va)
     chosen, best_n, best_f2 = choose_size(curve, cfg["prune_tol"])
     print("  " + " ".join(f"{n}:{f2:.5f}" for n, f2 in curve))
-    print(f"  best prefix {best_n} (val F2 {best_f2:.5f}); smallest within {cfg['prune_tol']}: {chosen} trees")
+    print(f"  best prefix {best_n} (val {fom} {best_f2:.5f}); smallest within {cfg['prune_tol']}: {chosen} trees")
     if best_n == curve[-1][0]:
         print(f"  NOTE: the curve peaks at the budget end ({best_n}); the chosen size is budget-limited")
     bst = bst[0:chosen]
@@ -787,14 +991,28 @@ def _run(flavour_cfg, overrides, force):
     # ---- Working points (validation, frozen) ----------------------------- #
     print("\n" + "=" * 70 + "\nWORKING POINTS (validation only)\n" + "=" * 70)
     s_val = bst.predict(xgb.DMatrix(X_va))
-    wp = pf.find_f2_threshold_binned(y_va, s_val, pt_va, cfg["pt_threshold_edges"], cfg["min_bin_signal"])
+    wp = working_points(y_va, s_val, pt_va, cfg, ref_va)
     edges = list(cfg["pt_threshold_edges"])
     thrs = [float(b[2]) for b in wp["bins"]]
     for lo, hi, thr, n_sig, n_rows, fb in wp["bins"]:
         hi_s = "inf" if not np.isfinite(hi) else f"{hi:g}"
         print(f"    pT [{lo:6.1f}, {hi_s:>4s}) GeV: thr={thr:.6f}  n_sig={n_sig}  n={n_rows}"
-              + ("  (fallback -> global F2)" if fb else ""))
+              + ("  (fallback -> global threshold)" if fb else ""))
     val_curve_f2 = dict(curve)[chosen]
+    wp_pinning = None
+    if cfg.get("wp_files"):
+        print("\n" + "=" * 70 + f"\nWORKING POINTS PINNED ON {len(cfg['wp_files'])} INDEPENDENT FILES\n" + "=" * 70)
+        X_w, y_w, ref_w, pt_w = independent_features(cfg, names)
+        thrs, wp_bins = pin_working_points(wp, bst.predict(xgb.DMatrix(X_w)), y_w, ref_w, pt_w, cfg)
+        for b in wp_bins:
+            hi_s = "inf" if b["hi"] is None else f"{b['hi']:g}"
+            rv = "-" if b["recall_at_validation_threshold"] is None else f"{b['recall_at_validation_threshold']:.4f}"
+            print(f"    pT [{b['lo']:6.1f}, {hi_s:>4s}) GeV: {b['reference_muons']:6d} reference muons, recall {rv} at the "
+                  f"validation threshold {b['validation_threshold']:.6f} -> "
+                  + (f"pinned at {b['threshold']:.6f}" if b["pinned"] else "validation threshold kept"))
+        wp_pinning = dict(files=[dict(path=f, size=os.path.getsize(f), md5=_md5(f)) for f in cfg["wp_files"]],
+                          min_rejected=cfg["wp_files_min_rejected"], bins=wp_bins)
+        del X_w
 
     # ---- Test (once) ----------------------------------------------------- #
     print("\n" + "=" * 70 + "\nTEST (frozen model + working points)\n" + "=" * 70)
@@ -805,7 +1023,7 @@ def _run(flavour_cfg, overrides, force):
     dec_b = pf.apply_binned_thresholds(s_te, pt_te, edges, thrs)
     m_g, m_b = decision_metrics(y_te, dec_g), decision_metrics(y_te, dec_b)
     print(f"  ROC-AUC {roc:.6f}  PR-AUC {prauc:.6f}")
-    for lab, m in (("global F2 WP", m_g), ("per-bin F2 WPs", m_b)):
+    for lab, m in ((f"global {wpl} WP", m_g), (f"per-bin {wpl} WPs", m_b)):
         print(f"  @{lab:15s}: P={m['precision']:.4f} R={m['recall']:.4f} F2={m['f2']:.4f} "
               f"fake rejection={m['fake_rejection']:.4f}")
     print(f"\n{classification_report(y_te, dec_b.astype(int), digits=4)}")
@@ -813,6 +1031,13 @@ def _run(flavour_cfg, overrides, force):
     print_perbin_table(tab_wp, "per working-point bin (per-bin WPs)")
     tab_std = perbin_table(y_te, dec_b, pt_te, [0.0, 5.0, 10.0, 50.0, 200.0])
     print_perbin_table(tab_std, "standard reporting bins (per-bin WPs)")
+    ref_recall = None
+    if ref_te is not None:
+        bins_te = pf.pt_bins_from_edges(edges)
+        ref_recall = [float(dec_b[ref_te & (pt_te >= lo) & (pt_te < hi)].mean())
+                      if (ref_te & (pt_te >= lo) & (pt_te < hi)).any() else None for lo, hi in bins_te]
+        print(f"\n  recall of the {cfg['wp_signal_feature']} tracks per working-point bin (targets "
+              f"{cfg['wp_recall_targets']}): " + " ".join("-" if r is None else f"{r:.4f}" for r in ref_recall))
     print("\n  per input file (per-bin WPs):")
     for fi, fname in enumerate(files):
         fm = fl_te == fi
@@ -823,8 +1048,8 @@ def _run(flavour_cfg, overrides, force):
         print(f"    {os.path.basename(fname):<22s} AUC={auc_f:.4f} P={m['precision']:.4f} "
               f"R={m['recall']:.4f} F2={m['f2']:.4f} [TP={m['tp']} FP={m['fp']} FN={m['fn']} TN={m['tn']}]")
     pf.plot_roc_pr(y_te, s_te, out)
-    pf.plot_confusion_matrix(y_te, None, 0, out, decisions=dec_b, title_suffix="(per-pT-bin F2 working points)")
-    pf.plot_confusion_matrix(y_te, s_te, wp["global_f2"], out, title_suffix="(global F2 working point)",
+    pf.plot_confusion_matrix(y_te, None, 0, out, decisions=dec_b, title_suffix=f"(per-pT-bin {wpl} working points)")
+    pf.plot_confusion_matrix(y_te, s_te, wp["global_f2"], out, title_suffix=f"(global {wpl} working point)",
                              filename="confusion_matrix_globalthr.png")
     pf.evaluate_pt_bins(y_te, s_te, pt_te, wp["global_f2"], out, decisions=dec_b)
 
@@ -844,7 +1069,9 @@ def _run(flavour_cfg, overrides, force):
 
     # ---- Records ---------------------------------------------------------- #
     thresholds = dict(
-        model="XGBoost", flavour=cfg["name"], split="evt10",
+        model="XGBoost", flavour=cfg["name"], split=cfg["split_mode"], dedup_copies=bool(cfg["dedup_copies"]),
+        wp_mode=cfg["wp_mode"], wp_recall_targets=cfg["wp_recall_targets"], wp_recall_global=cfg["wp_recall_global"],
+        wp_reference=cfg.get("wp_signal_feature") or "all signal tracks", test_recall_of_reference=ref_recall,
         n_features=len(names), feature_names=names,
         tree_budget=cfg["n_estimators"], chosen_trees=chosen, prune_tol=cfg["prune_tol"],
         best_prefix=best_n, best_prefix_val_f2=best_f2, val_f2_at_chosen=val_curve_f2,
@@ -852,6 +1079,8 @@ def _run(flavour_cfg, overrides, force):
         global_f1_threshold=float(wp["global_f1"]), global_f2_threshold=float(wp["global_f2"]),
         pt_bin_edges=edges, pt_bin_f2_thresholds=thrs,
         pt_bin_fallback=[bool(b[5]) for b in wp["bins"]],
+        # thresholds of the pT bins replaced by the recall-target quantiles of independent events (--wp-files)
+        wp_pinning=wp_pinning,
         compact_bin=dict(md5=bin_md5, n_nodes=int(len(forest["feat"])), n_trees=int(len(forest["roots"])),
                          base_logit=float(forest["base_logit"]), cmssw_file=cfg.get("cmssw_bin")),
         test=dict(roc_auc=roc, pr_auc=prauc, global_wp=m_g, perbin_wp=m_b,
@@ -868,14 +1097,16 @@ def _run(flavour_cfg, overrides, force):
         f.write(f"Test_F2_global_WP: {m_g['f2']}\nTest_F2_perbin_WP: {m_b['f2']}\n")
         f.write(f"Test_perbin_WP: precision={m_b['precision']} recall={m_b['recall']} "
                 f"fake_rejection={m_b['fake_rejection']}\n")
-        f.write("Split: evt10 (event-level, train 60 / val 10 / test 30)\n")
+        f.write(f"Split: {cfg['split_mode']} (train 60 / val 10 / test 30)\n")
         f.write(f"Tree_budget: {cfg['n_estimators']}\nChosen_trees: {chosen} (prune_tol={cfg['prune_tol']}, "
                 f"val F2 {val_curve_f2:.6f}, best prefix {best_n} at {best_f2:.6f})\n")
-        f.write("pT-bin F2 set points (validation-derived):\n")
+        f.write(f"pT-bin {wpl} set points (validation-derived):\n")
         for (lo, hi, thr, n_sig, _, fb) in wp["bins"]:
             hi_s = "inf" if not np.isfinite(hi) else f"{hi:.1f}"
             f.write(f"  pT [{lo:.1f}, {hi_s}): thr={thr:.6f}  n_val_sig={n_sig}"
                     + ("  [fallback->global]\n" if fb else "\n"))
+        if wp_pinning:
+            f.writelines(pinning_lines(wp_pinning))
         f.write(f"compact .bin md5: {bin_md5}\n")
     write_cmssw_snippet(out + "cmssw_cfi_snippet.py", cfg, thresholds)
 
@@ -944,7 +1175,7 @@ def write_cmssw_snippet(path, cfg, th):
     for (lo, hi), thr, fb in zip(pf.pt_bins_from_edges(th["pt_bin_edges"]), th["pt_bin_f2_thresholds"],
                                  th["pt_bin_fallback"]):
         hi_s = "inf" if not np.isfinite(hi) else f"{hi:g}"
-        lines.append(f"    {thr!r},  # pT [{lo:g}, {hi_s})" + (" - global F2 fallback" if fb else ""))
+        lines.append(f"    {thr!r},  # pT [{lo:g}, {hi_s})" + (" - global threshold fallback" if fb else ""))
     lines += [")", f"nFeatures = cms.int32({th['n_features']}),"]
     with open(path, "w") as f:
         f.write("\n".join(lines) + "\n")
@@ -956,6 +1187,9 @@ def main_cli(flavour_cfg):
     add_cache_dir_arg(ap)
     ap.add_argument("--output-dir", help="output directory (default: the production directory)")
     ap.add_argument("--force", action="store_true", help="replace a non-empty output directory")
+    ap.add_argument("--wp-files", nargs="+", metavar="FILE",
+                    help="n-tuples of independent events of the same chain (e.g. RelVal samples): the working points "
+                         "of the pT bins they populate are set on their muons")
     ap.add_argument("--device", choices=["cuda", "cpu"])
     ap.add_argument("--no-permutation-importance", action="store_true")
     ap.add_argument("--set", action="append", default=[], metavar="KEY=JSON",
@@ -970,6 +1204,8 @@ def main_cli(flavour_cfg):
     over["data_dir"], over["cache_dir"] = a.data_dir, a.cache_dir
     if a.output_dir:
         over["output_dir"] = a.output_dir
+    if a.wp_files:
+        over["wp_files"] = [os.path.abspath(f) for f in a.wp_files]
     if a.device:
         over["device"] = a.device
     if a.no_permutation_importance:

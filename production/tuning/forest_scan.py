@@ -37,7 +37,7 @@ import pixel_features as pf  # noqa: E402
 
 # Candidate configurations: overrides of forest_pipeline.DEFAULTS
 CONFIGS = {
-    "base": {},                                              # production v2
+    "base": {},                                              # depth 6 / 0.1 (dev2 configuration)
     "d8": dict(max_depth=8),
     "d10": dict(max_depth=10),
     "d8_lr05": dict(max_depth=8, learning_rate=0.05),

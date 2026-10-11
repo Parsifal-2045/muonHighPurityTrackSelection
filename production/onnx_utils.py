@@ -8,7 +8,7 @@ physical cores and pins every worker to a core. Inside a restricted cpuset
 pinning fails for cores outside the set and ORT prints one
 "pthread_setaffinity_np failed ... Specify the number of threads explicitly
 so the affinity is not set" error per worker (144 lines per session in the
-v2 training logs). Sizing the pools explicitly disables the pinning, so every
+dev2 training logs). Sizing the pools explicitly disables the pinning, so every
 session in the training code is created through make_session().
 
 The DNN trainers export with the TorchScript-based exporter on purpose: it
@@ -25,10 +25,25 @@ import numpy as np
 
 
 def available_cpus():
-    """CPUs this process may run on (cpuset-aware)."""
-    if hasattr(os, "sched_getaffinity"):
-        return len(os.sched_getaffinity(0))
-    return os.cpu_count() or 1
+    """CPUs this process may use: the cpuset, capped by the CPU quota of its cgroup (containers and batch
+    slots usually see every core of the host but may use only a few of them)."""
+    n = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else os.cpu_count() or 1
+    try:
+        with open("/sys/fs/cgroup/cpu.max") as f:                      # cgroup v2: "<quota> <period>" or "max ..."
+            quota, period = f.read().split()
+        if quota != "max":
+            n = min(n, max(1, int(quota) // int(period)))
+    except (OSError, ValueError):
+        try:                                                           # cgroup v1
+            with open("/sys/fs/cgroup/cpu/cpu.cfs_quota_us") as f:
+                quota = int(f.read())
+            with open("/sys/fs/cgroup/cpu/cpu.cfs_period_us") as f:
+                period = int(f.read())
+            if quota > 0:
+                n = min(n, max(1, quota // period))
+        except (OSError, ValueError):
+            pass
+    return n
 
 
 def make_session(model, intra_threads=None):

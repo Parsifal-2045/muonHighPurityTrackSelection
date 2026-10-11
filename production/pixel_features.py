@@ -31,6 +31,8 @@ from sklearn.metrics import (
     roc_curve,
 )
 
+import chamber_match
+
 
 # --------------------------------------------------------------------------- #
 # Configuration (shared between DNN and XGBoost)
@@ -153,20 +155,36 @@ LABEL_FIELD = label_field(PIXEL_PREFIX)
 # --------------------------------------------------------------------------- #
 # Production feature ABI (IO selectors)
 # --------------------------------------------------------------------------- #
-# build_dataset() emits 44 features; the deployed forests use 33 of them.
-# The 11 dropped ones (44 -> 33 pruning, see pixel_xgb.py):
-_IO_DROPPED_VARS = [
-    "nLostHits", "hitEfficiency", "normalizedChi2", "chi2PerHit", "chi2",
-    "impactSignificance", "dxyErr", "dszErr", "eta", "ptErr", "relUncertaintyProduct",
-]
-# The 33 kept features in training order. This order is the ABI of the CMSSW
-# extractor (RecoMuon/L3TrackFinder/interface/IOTrackSelectorFeatures.h,
-# muonhp::IOTrackFeatures::toArray()); the forest pipeline asserts it.
-_IO_KEPT_TRACK_VARS = [
-    "p", "pt", "etaErr", "phiErr", "dzErr", "qoverpErr", "lambdaErr",
-    "nPixelHits", "nTrkLays", "nFoundHits",
-    "impact3D", "sigmaPtOverPt", "sip2D", "sipZ", "dxyOverPt", "ptErrOverP", "dzOverDxy", "absEta",
-]
+# build_dataset() emits the track features (30 without the L1 block, 44 with it) followed by the track-to-chamber
+# matching features of chamber_match.py (the raw quantities of the two nearest candidates of every muon station).
+# The IO forests use 46 of them:
+#   9 track quantities: momentum, pT, |eta|, the significance of the transverse impact parameter and the
+#     uncertainties of the curvature, the transverse momentum, the two angles and the longitudinal impact parameter;
+#   the number of endcap stubs of the matched L1 tracker muon;
+#   for each of the 11 muon stations, the bend and the eta difference of the nearest candidate (22);
+#   for the 5 segment stations, how much more its direction is bent than its position (5);
+#   the bend and the eta difference of the second candidate in ME0, station 1, GE1/1 and GE2/1 (8), where the
+#     nearest candidate is most often not the muon's own (in the GEM stations the muon's hit in the other layer),
+#     and its direction-minus-position bend in station 1 (1).
+# One list for both chains, built by structure and checked by importance-driven pruning: second candidates in the
+# outer stations add nothing, and every further cut costs fake rejection (about 13% more fakes at 40 features).
+# This list and its order are the ABI of the CMSSW extractor
+# (RecoMuon/L3TrackFinder/interface/IOTrackSelectorFeatures.h, muonhp::IOTrackFeatures::toArray()); the forest
+# pipeline selects the columns in this order.
+_IO_TRACK_VARS = ["p", "pt", "dzErr", "qoverpErr", "sigmaPtOverPt", "sip2D", "absEta", "etaErr", "phiErr"]
+_IO_L1_VARS = ["L1TkMu_nStubs_Endcap"]
+_IO_SECOND_STATIONS = ["ME0", "St1", "GE11", "GE21"]
+_IO_CHAMBER_FEATURES = (
+    [f"cm_bend_{s}" for s in chamber_match.STATIONS] + [f"cm_dEta_{s}" for s in chamber_match.STATIONS]
+    + [f"cm_bendDiff_{s}" for s in chamber_match.SEGMENT_STATIONS]
+    + [f"cm_bend2_{s}" for s in _IO_SECOND_STATIONS] + [f"cm_dEta2_{s}" for s in _IO_SECOND_STATIONS]
+    + ["cm_bendDiff2_St1"]
+)
+# Per-track flag appended by build_dataset(signalMuonFlag=True): 1 for a track of a generator-level muon of the
+# signal event (gun, Bs), 0 for pileup muons and for fakes. Not a feature: the working points are set on it.
+SIGNAL_MUON_FLAG = "gen_signal_muon"
+GEN_BRANCHES = ["GenPart_pt", "GenPart_eta", "GenPart_phi", "GenPart_pdgId", "GenPart_status"]
+# The 14 L1TkMuon features of build_dataset(useL1TkMuFeatures=True) (one of them is in the production set)
 _IO_L1_FEATURES = [
     "L1TkMu_nStubs", "L1TkMu_nStubs_Endcap", "L1TkMu_nStubs_Barrel", "L1TkMu_stubQual_max",
     "L1TkMu_stubMax_etaRegion", "L1TkMu_stubMax_phiRegion", "L1TkMu_stubMax_depthRegion",
@@ -175,12 +193,24 @@ _IO_L1_FEATURES = [
 ]
 
 
-def io_drop_features(prefix):
-    return [f"{prefix}_{v}" for v in _IO_DROPPED_VARS]
-
-
 def io_production_features(prefix):
-    return [f"{prefix}_{v}" for v in _IO_KEPT_TRACK_VARS] + _IO_L1_FEATURES + ["is_low_pt"]
+    return [f"{prefix}_{v}" for v in _IO_TRACK_VARS] + _IO_L1_VARS + _IO_CHAMBER_FEATURES
+
+
+def io_branches(prefix):
+    """Input branches of the IO production features and of the signal-muon flag."""
+    return (tk_branches(prefix) + [f"{prefix}_tpCharge"] + L1TKMUON_BRANCHES + STUB_BRANCHES + chamber_match.branches()
+            + GEN_BRANCHES)
+
+
+def signal_muon_flag(arr, prefix):
+    """Jagged per-track flag: the track is associated to a muon TrackingParticle that matches a status-1
+    generator muon of the signal event (dR < 0.02 and pT within 10%)."""
+    g = (abs(arr["GenPart_pdgId"]) == 13) & (arr["GenPart_status"] == 1)
+    ge, gp, gpt = (arr[f"GenPart_{v}"][g][:, np.newaxis, :] for v in ("eta", "phi", "pt"))
+    te, tp, tpt = (arr[f"{prefix}_tp{v}"][:, :, np.newaxis] for v in ("Eta", "Phi", "Pt"))
+    ok = ((te - ge) ** 2 + delta_phi(tp, gp) ** 2 < 0.02 ** 2) & (abs(tpt / gpt - 1.0) < 0.1)
+    return ak.any(ok, axis=2) & (arr[label_field(prefix)] == 1) & (abs(arr[f"{prefix}_tpPdgId"]) == 13)
 
 
 # --------------------------------------------------------------------------- #
@@ -190,7 +220,7 @@ def io_production_features(prefix):
 # OITrackSelectorFeatures.h): raw inputs as stored in the n-tuple (float32),
 # every operation in float64, each feature rounded to float32 once. Mixing
 # float32 and float64 arithmetic between training and inference moves
-# constant-valued (imputed) features across forest split points: in the v2
+# constant-valued (imputed) features across forest split points: in the dev2
 # models log10(1 + 1e-6) evaluated in float vs double flipped 177 nodes.
 def as_float64(arr):
     """All fields of an event record array as float64."""
@@ -235,10 +265,11 @@ def calculate_metrics(c):
 # Dataset construction
 # --------------------------------------------------------------------------- #
 def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeatures=True,
-                  verbose=False, event_ids=None, prefix=PIXEL_PREFIX):
+                  verbose=False, event_ids=None, prefix=PIXEL_PREFIX, chamberMatch=False, signalMuonFlag=False):
     """
-    Builds the 44-feature IO matrix from an awkward array of events;
-    `prefix` selects the track collection (PIXEL_PREFIX or SEEDS_PREFIX).
+    Builds the IO feature matrix from an awkward array of events; `prefix` selects the track collection
+    (PIXEL_PREFIX or SEEDS_PREFIX). Columns: 30 track features (44 with the L1TkMuon block), then the
+    chamber_match.FEATURES if chamberMatch, then SIGNAL_MUON_FLAG if signalMuonFlag.
 
     Returns (X, y, file_labels_masked, final_feature_names).
     If event_ids (one id per event) is given, the per-track event ids survive
@@ -571,6 +602,17 @@ def build_dataset(arr, file_labels_in, useL1TkMuFeatures=True, useL1TkMuStubFeat
     low_pt_indicator = 1.0 / (1.0 + np.exp(exponent))
     cols.append(low_pt_indicator)
     final_feature_names.append("is_low_pt")
+
+    # Track-to-chamber matching (chamber_match.py)
+    if chamberMatch:
+        cmf = chamber_match.track_features(arr, prefix)
+        flat_mask = ak.to_numpy(ak.flatten(mask))
+        cols += [cmf[n][flat_mask] for n in chamber_match.FEATURES]
+        final_feature_names += chamber_match.FEATURES
+
+    if signalMuonFlag:
+        cols.append(ak.to_numpy(ak.flatten(signal_muon_flag(arr, prefix)[mask])).astype(np.float32))
+        final_feature_names.append(SIGNAL_MUON_FLAG)
 
     # Assemble (the single float64 -> float32 rounding of every feature)
     X = np.column_stack(cols).astype(np.float32)

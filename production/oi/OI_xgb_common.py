@@ -33,16 +33,13 @@ OI_BASE = dict(
     # duplicate qoverpErr's pT-uncertainty information; chi2 duplicates
     # normalizedChi2/chi2PerHit. The 26-feature round-1 setup is
     # --set drop_features=[] --set production_features=null.
+    copy_group_features=["l3_tk_OI_pt", "l3_tk_OI_eta", "l3_tk_OI_nPixelHits"],
     drop_features=oif.OI_DROP_FEATURES,
     production_features=oif.OI_PRODUCTION_FEATURES,
     cmssw_cfi="HLTrigger/Configuration/python/HLT_75e33/modules/hltPhase2L3OIMuonTrackSelectionHighPurityForest_cfi.py",
-    # Depth 10 / learning rate 0.1: the OI validation F2 is flat across the
-    # scanned configurations (within +-0.0005, tuning/results/), depth 10 is
-    # marginally but consistently ahead of depth 6 on two validation folds at
-    # ~1/3 of its inference cost; depth 12 / 0.2 collapses to ~100 trees for
-    # no measurable gain.
-    max_depth=10,
-    learning_rate=0.1,
+    # Hyperparameters: the pipeline defaults (shallow forests, copy-aware split).
+    # Working points: the recall targets of the IO forests (98% below 3 GeV, 99% up to 5 GeV, 99.5% above).
+    wp_recall_targets=[0.98, 0.99, 0.995, 0.995, 0.995, 0.995],
 )
 
 
