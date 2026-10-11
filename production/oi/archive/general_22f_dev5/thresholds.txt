@@ -1,0 +1,20 @@
+Flavour: OI general
+Model: XGBoost (500 trees, 22 features)
+F1_Threshold: 0.1442599594593048
+F2_Threshold: 0.1442599594593048
+Test_ROC_AUC: 0.9963307827854241
+Test_PR_AUC: 0.9547872093220117
+Test_F2_global_WP: 0.896192507267678
+Test_F2_perbin_WP: 0.8539240069197145
+Test_perbin_WP: precision=0.5480388704982181 recall=0.9924001887074915 fake_rejection=0.9445843632982246
+Split: evt10 (event-level, train 60 / val 10 / test 30)
+Tree_budget: 2000
+Chosen_trees: 500 (prune_tol=0.005, val F2 0.950322, best prefix 1900 at 0.955110)
+pT-bin recall-target set points (validation-derived):
+  pT [0.0, 3.0): thr=0.144678  n_val_sig=3846
+  pT [3.0, 5.0): thr=0.023177  n_val_sig=1906
+  pT [5.0, 10.0): thr=0.048214  n_val_sig=5043
+  pT [10.0, 50.0): thr=0.005462  n_val_sig=2497
+  pT [50.0, 200.0): thr=0.097481  n_val_sig=3276
+  pT [200.0, inf): thr=0.297187  n_val_sig=8022
+compact .bin md5: 39603fc4f6c7a7ef54c8bbad25dbf932

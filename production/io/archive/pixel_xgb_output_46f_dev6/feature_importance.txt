@@ -1,0 +1,99 @@
+Test PR-AUC: 0.986639
+Test ROC-AUC: 0.995295
+
+Rank  Feature                                              Gain       Cover
+---------------------------------------------------------------------------
+1     muon_pixel_tracks_pt                              1287.85      5087.6
+2     L1TkMu_nStubs_Endcap                              1009.84      6082.8
+3     cm_bend_RPC4                                       220.32      1845.3
+4     cm_bend_ME0                                        157.37      3072.5
+5     cm_dEta_St2                                        122.80      1873.8
+6     cm_dEta_ME0                                        118.28      3305.5
+7     cm_dEta_St3                                         85.63      1487.8
+8     cm_bend_RPC2                                        74.33      2349.6
+9     muon_pixel_tracks_qoverpErr                         69.61      1752.4
+10    cm_bend_GE21                                        66.32      1882.4
+11    muon_pixel_tracks_absEta                            66.15      2844.5
+12    cm_dEta_RPC2                                        64.49      1521.0
+13    muon_pixel_tracks_etaErr                            62.91      1454.2
+14    cm_dEta2_ME0                                        58.72      1566.4
+15    cm_bend_RPC1                                        53.97      2088.5
+16    cm_bendDiff_St1                                     52.72      1640.5
+17    cm_bendDiff_ME0                                     52.19      2107.7
+18    cm_dEta_RPC3                                        51.37      1814.9
+19    muon_pixel_tracks_p                                 48.00      2524.6
+20    cm_bend2_GE11                                       47.54      1938.8
+21    cm_dEta_GE21                                        46.23      1844.6
+22    cm_bend2_ME0                                        45.53      1939.2
+23    cm_dEta2_GE21                                       42.82      2175.0
+24    muon_pixel_tracks_sigmaPtOverPt                     41.25      1960.0
+25    cm_bend_St2                                         39.80      1191.8
+26    cm_dEta_RPC4                                        38.46      1568.1
+27    cm_bend_St1                                         38.22      1272.0
+28    cm_bend_GE11                                        38.10      1790.1
+29    cm_bend_RPC3                                        37.88      1607.1
+30    cm_bend2_GE21                                       36.28      1460.3
+31    cm_bendDiff_St2                                     35.61      1571.9
+32    cm_bendDiff_St3                                     35.17      1887.5
+33    cm_dEta_RPC1                                        34.58      1334.5
+34    cm_dEta2_GE11                                       33.16      2774.5
+35    cm_bend_St4                                         33.02      1290.0
+36    cm_bendDiff_St4                                     32.27      1895.6
+37    cm_dEta_St4                                         31.01      1329.3
+38    cm_bend_St3                                         30.76      1037.4
+39    muon_pixel_tracks_sip2D                             25.65      1303.6
+40    cm_bendDiff2_St1                                    25.58      1477.5
+41    cm_dEta_St1                                         23.42      1620.3
+42    cm_dEta_GE11                                        22.72      1457.1
+43    muon_pixel_tracks_dzErr                             19.90      1467.6
+44    muon_pixel_tracks_phiErr                            18.38      1331.3
+45    cm_dEta2_St1                                        17.44      1294.5
+46    cm_bend2_St1                                        17.29       986.0
+
+Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
+  muon_pixel_tracks_absEta                     +0.14605 +/- 0.00056
+  muon_pixel_tracks_pt                         +0.06746 +/- 0.00048
+  L1TkMu_nStubs_Endcap                         +0.03913 +/- 0.00034
+  cm_dEta_ME0                                  +0.02985 +/- 0.00024
+  cm_bend_ME0                                  +0.02867 +/- 0.00022
+  muon_pixel_tracks_p                          +0.02308 +/- 0.00021
+  cm_bendDiff_St1                              +0.02185 +/- 0.00012
+  muon_pixel_tracks_sigmaPtOverPt              +0.01071 +/- 0.00013
+  cm_bend_St1                                  +0.01041 +/- 0.00022
+  cm_dEta_St1                                  +0.00931 +/- 0.00014
+  cm_dEta2_GE11                                +0.00912 +/- 0.00023
+  cm_dEta_GE21                                 +0.00816 +/- 0.00021
+  muon_pixel_tracks_sip2D                      +0.00779 +/- 0.00014
+  cm_bendDiff_St2                              +0.00654 +/- 0.00007
+  cm_bend_GE21                                 +0.00627 +/- 0.00012
+  muon_pixel_tracks_dzErr                      +0.00601 +/- 0.00009
+  muon_pixel_tracks_qoverpErr                  +0.00588 +/- 0.00017
+  cm_bend_St2                                  +0.00585 +/- 0.00007
+  cm_dEta_St2                                  +0.00568 +/- 0.00017
+  cm_bendDiff_ME0                              +0.00560 +/- 0.00008
+  cm_dEta_St3                                  +0.00470 +/- 0.00016
+  muon_pixel_tracks_etaErr                     +0.00418 +/- 0.00014
+  cm_bend_GE11                                 +0.00410 +/- 0.00005
+  muon_pixel_tracks_phiErr                     +0.00409 +/- 0.00013
+  cm_bend2_GE11                                +0.00405 +/- 0.00009
+  cm_dEta_GE11                                 +0.00373 +/- 0.00010
+  cm_bend_RPC2                                 +0.00360 +/- 0.00010
+  cm_bendDiff2_St1                             +0.00359 +/- 0.00006
+  cm_dEta_RPC2                                 +0.00353 +/- 0.00005
+  cm_bend2_GE21                                +0.00343 +/- 0.00004
+  cm_bend_RPC3                                 +0.00341 +/- 0.00006
+  cm_bend_RPC1                                 +0.00288 +/- 0.00009
+  cm_dEta2_GE21                                +0.00247 +/- 0.00004
+  cm_dEta_RPC1                                 +0.00209 +/- 0.00007
+  cm_dEta_RPC4                                 +0.00201 +/- 0.00005
+  cm_bendDiff_St3                              +0.00198 +/- 0.00019
+  cm_dEta2_ME0                                 +0.00194 +/- 0.00005
+  cm_dEta2_St1                                 +0.00186 +/- 0.00013
+  cm_bend_St4                                  +0.00171 +/- 0.00008
+  cm_bend2_St1                                 +0.00160 +/- 0.00009
+  cm_dEta_RPC3                                 +0.00150 +/- 0.00009
+  cm_bend_St3                                  +0.00140 +/- 0.00006
+  cm_bendDiff_St4                              +0.00109 +/- 0.00008
+  cm_dEta_St4                                  +0.00057 +/- 0.00007
+  cm_bend2_ME0                                 +0.00052 +/- 0.00004
+  cm_bend_RPC4                                 +0.00017 +/- 0.00010

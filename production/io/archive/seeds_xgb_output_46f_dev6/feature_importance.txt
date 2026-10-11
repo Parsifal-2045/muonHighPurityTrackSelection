@@ -1,0 +1,99 @@
+Test PR-AUC: 0.990438
+Test ROC-AUC: 0.997809
+
+Rank  Feature                                              Gain       Cover
+---------------------------------------------------------------------------
+1     muon_general_tracks_pt                            1200.94      3345.7
+2     L1TkMu_nStubs_Endcap                               972.61      6682.8
+3     cm_bend_RPC4                                       228.45      1946.6
+4     cm_bend_ME0                                        148.67      2430.4
+5     cm_dEta_St2                                        139.17      1501.7
+6     cm_dEta_ME0                                         98.01      1990.7
+7     cm_dEta_St3                                         73.51       828.1
+8     cm_bend_RPC2                                        68.22      1311.6
+9     muon_general_tracks_etaErr                          61.49       957.8
+10    muon_general_tracks_qoverpErr                       60.58      1685.4
+11    cm_bend_GE21                                        60.32      1254.4
+12    cm_bend2_GE21                                       58.41      1159.7
+13    cm_dEta_RPC4                                        54.17       987.1
+14    muon_general_tracks_absEta                          47.94      1351.8
+15    cm_bend_St2                                         47.50       695.8
+16    cm_dEta2_ME0                                        44.62      1175.0
+17    cm_bend_RPC1                                        43.08      1228.5
+18    cm_bend_St1                                         42.41       809.8
+19    cm_bend_GE11                                        42.00      1135.9
+20    cm_bendDiff_ME0                                     41.93      1898.4
+21    cm_bend2_ME0                                        41.56       772.4
+22    muon_general_tracks_p                               41.55      1542.6
+23    cm_bend_RPC3                                        41.34      1139.9
+24    cm_dEta_GE21                                        36.79      1198.2
+25    cm_bend2_GE11                                       36.15       938.1
+26    cm_bendDiff_St1                                     34.66       993.4
+27    cm_bend_St3                                         33.23       494.8
+28    cm_dEta_RPC2                                        32.25       901.1
+29    cm_dEta_RPC3                                        31.08       890.3
+30    cm_dEta2_GE21                                       29.68       875.0
+31    cm_dEta2_GE11                                       27.22      1164.5
+32    cm_dEta_RPC1                                        25.56       714.9
+33    cm_bend_St4                                         23.88       868.0
+34    cm_bendDiff_St4                                     22.26       768.4
+35    cm_dEta_St4                                         22.05      1124.4
+36    cm_bendDiff_St2                                     21.89       622.9
+37    muon_general_tracks_sip2D                           21.20       961.9
+38    muon_general_tracks_dzErr                           20.93       801.5
+39    muon_general_tracks_sigmaPtOverPt                   20.82       898.7
+40    cm_bendDiff_St3                                     20.51       722.9
+41    cm_dEta_St1                                         20.32       802.2
+42    cm_bendDiff2_St1                                    20.25       847.0
+43    cm_dEta_GE11                                        18.21       554.5
+44    cm_bend2_St1                                        18.06       552.5
+45    muon_general_tracks_phiErr                          17.52      1067.1
+46    cm_dEta2_St1                                        15.34       643.0
+
+Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
+  muon_general_tracks_absEta                   +0.15902 +/- 0.00032
+  cm_bend_ME0                                  +0.05531 +/- 0.00012
+  muon_general_tracks_pt                       +0.04107 +/- 0.00025
+  cm_dEta_ME0                                  +0.03755 +/- 0.00007
+  L1TkMu_nStubs_Endcap                         +0.02555 +/- 0.00016
+  muon_general_tracks_p                        +0.02251 +/- 0.00027
+  cm_bendDiff_St1                              +0.01731 +/- 0.00013
+  cm_bendDiff_ME0                              +0.01160 +/- 0.00006
+  cm_bend_St1                                  +0.01003 +/- 0.00005
+  cm_dEta_St1                                  +0.00985 +/- 0.00015
+  muon_general_tracks_sip2D                    +0.00835 +/- 0.00007
+  muon_general_tracks_sigmaPtOverPt            +0.00802 +/- 0.00006
+  muon_general_tracks_dzErr                    +0.00733 +/- 0.00008
+  muon_general_tracks_phiErr                   +0.00677 +/- 0.00005
+  cm_dEta2_GE11                                +0.00655 +/- 0.00011
+  muon_general_tracks_qoverpErr                +0.00561 +/- 0.00018
+  cm_bend_GE21                                 +0.00559 +/- 0.00007
+  cm_bendDiff2_St1                             +0.00550 +/- 0.00005
+  cm_bendDiff_St2                              +0.00546 +/- 0.00009
+  cm_bend_St2                                  +0.00522 +/- 0.00004
+  cm_dEta2_St1                                 +0.00469 +/- 0.00005
+  cm_bend2_St1                                 +0.00441 +/- 0.00004
+  cm_bend_GE11                                 +0.00430 +/- 0.00004
+  cm_bend_RPC1                                 +0.00401 +/- 0.00004
+  cm_bend2_GE21                                +0.00392 +/- 0.00003
+  cm_bend2_GE11                                +0.00355 +/- 0.00006
+  cm_dEta2_GE21                                +0.00352 +/- 0.00007
+  cm_bend_RPC2                                 +0.00339 +/- 0.00003
+  cm_dEta2_ME0                                 +0.00327 +/- 0.00002
+  cm_bendDiff_St3                              +0.00309 +/- 0.00006
+  cm_dEta_St2                                  +0.00294 +/- 0.00003
+  cm_bend2_ME0                                 +0.00280 +/- 0.00001
+  cm_bend_RPC3                                 +0.00278 +/- 0.00004
+  cm_dEta_St3                                  +0.00276 +/- 0.00009
+  muon_general_tracks_etaErr                   +0.00267 +/- 0.00003
+  cm_bend_RPC4                                 +0.00257 +/- 0.00004
+  cm_bendDiff_St4                              +0.00252 +/- 0.00004
+  cm_dEta_RPC3                                 +0.00246 +/- 0.00003
+  cm_dEta_RPC2                                 +0.00236 +/- 0.00004
+  cm_bend_St3                                  +0.00224 +/- 0.00006
+  cm_dEta_St4                                  +0.00173 +/- 0.00004
+  cm_dEta_RPC1                                 +0.00171 +/- 0.00002
+  cm_dEta_RPC4                                 +0.00156 +/- 0.00004
+  cm_bend_St4                                  +0.00122 +/- 0.00003
+  cm_dEta_GE21                                 +0.00112 +/- 0.00016
+  cm_dEta_GE11                                 +0.00036 +/- 0.00007

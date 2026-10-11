@@ -1,0 +1,27 @@
+Flavour: IO pixel
+Model: XGBoost (1300 trees, 46 features)
+F1_Threshold: 0.6937676072120667
+F2_Threshold: 0.6937676072120667
+Test_ROC_AUC: 0.9952950625005552
+Test_PR_AUC: 0.9866394047995455
+Test_F2_global_WP: 0.9641389267809319
+Test_F2_perbin_WP: 0.9557799805177465
+Test_perbin_WP: precision=0.8404835543544673 recall=0.989722470816149 fake_rejection=0.9353739508424134
+Split: copygroup (train 60 / val 10 / test 30)
+Tree_budget: 1500
+Chosen_trees: 1300 (prune_tol=0.002, val F2 0.931644, best prefix 1500 at 0.933550)
+pT-bin recall-target set points (validation-derived):
+  pT [0.0, 3.0): thr=0.081995  n_val_sig=8168
+  pT [3.0, 5.0): thr=0.643719  n_val_sig=23956
+  pT [5.0, 10.0): thr=0.978501  n_val_sig=29834
+  pT [10.0, 50.0): thr=0.997349  n_val_sig=13649
+  pT [50.0, 200.0): thr=0.999905  n_val_sig=17697
+  pT [200.0, inf): thr=0.999781  n_val_sig=25483
+pT-bin working points pinned on 3 files of independent events (bins with at least 10 reference muons below the threshold):
+  pT [0.0, 3.0): thr=0.172008  n_ref=1032
+  pT [3.0, 5.0): thr=0.572018  n_ref=2978
+  pT [5.0, 10.0): thr=0.940807  n_ref=2723
+  pT [10.0, 50.0): thr=0.998925  n_ref=6692
+  pT [50.0, 200.0): thr=0.999905  n_ref=974  [validation threshold kept]
+  pT [200.0, inf): thr=0.999781  n_ref=12  [validation threshold kept]
+compact .bin md5: fd05e3d1faf183cb8184fcb63dd89470

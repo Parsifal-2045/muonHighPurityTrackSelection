@@ -1,0 +1,51 @@
+Test PR-AUC: 0.954787
+Test ROC-AUC: 0.996331
+
+Rank  Feature                                              Gain       Cover
+---------------------------------------------------------------------------
+1     l3_tk_OI_nTrkLays                                10486.80     21668.8
+2     l3_tk_OI_nPixelHits                               4951.90     15011.8
+3     l3_tk_OI_nFoundHits                               1968.32     12502.3
+4     l3_tk_OI_nLostHits                                1675.23     10941.1
+5     l3_tk_OI_impact3D                                 1417.67     17198.2
+6     l3_tk_OI_hitEfficiency                             962.92     17121.6
+7     l3_tk_OI_normalizedChi2                            959.09     10675.6
+8     l3_tk_OI_dzErr                                     796.87     13686.2
+9     is_low_pt                                          507.01      8496.9
+10    l3_tk_OI_dxyErr                                    501.84      9611.1
+11    l3_tk_OI_phiErr                                    373.30     15717.0
+12    l3_tk_OI_chi2PerHit                                313.31      8862.8
+13    l3_tk_OI_pt                                        312.95     15540.7
+14    l3_tk_OI_qoverpErr                                 239.11     10102.3
+15    l3_tk_OI_etaErr                                    201.60     13965.1
+16    l3_tk_OI_impactSignificance                        190.23      9516.9
+17    l3_tk_OI_eta                                       147.65      6172.2
+18    l3_tk_OI_p                                         107.34      9984.0
+19    l2_mu_vtx_hasMatch                                  92.48     20327.7
+20    l2_mu_vtx_matchingScore                             79.60     12381.9
+21    l3_tk_OI_dszErr                                     78.78      9130.5
+22    l3_tk_OI_lambdaErr                                  57.82      8505.3
+
+Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
+  l3_tk_OI_nTrkLays                            +0.31857 +/- 0.00178
+  l3_tk_OI_nPixelHits                          +0.07955 +/- 0.00206
+  l3_tk_OI_impact3D                            +0.04566 +/- 0.00090
+  l3_tk_OI_dzErr                               +0.03188 +/- 0.00122
+  l3_tk_OI_etaErr                              +0.02756 +/- 0.00075
+  l3_tk_OI_eta                                 +0.02186 +/- 0.00086
+  l3_tk_OI_phiErr                              +0.01969 +/- 0.00026
+  l3_tk_OI_nFoundHits                          +0.01771 +/- 0.00063
+  l3_tk_OI_hitEfficiency                       +0.01754 +/- 0.00209
+  l3_tk_OI_qoverpErr                           +0.01429 +/- 0.00057
+  l2_mu_vtx_hasMatch                           +0.01279 +/- 0.00095
+  is_low_pt                                    +0.00887 +/- 0.00018
+  l2_mu_vtx_matchingScore                      +0.00652 +/- 0.00089
+  l3_tk_OI_normalizedChi2                      +0.00444 +/- 0.00050
+  l3_tk_OI_lambdaErr                           +0.00413 +/- 0.00059
+  l3_tk_OI_pt                                  +0.00374 +/- 0.00045
+  l3_tk_OI_dszErr                              +0.00301 +/- 0.00043
+  l3_tk_OI_p                                   +0.00205 +/- 0.00023
+  l3_tk_OI_dxyErr                              +0.00137 +/- 0.00042
+  l3_tk_OI_chi2PerHit                          -0.00152 +/- 0.00079
+  l3_tk_OI_impactSignificance                  -0.01176 +/- 0.00055
+  l3_tk_OI_nLostHits                           -0.02053 +/- 0.00032

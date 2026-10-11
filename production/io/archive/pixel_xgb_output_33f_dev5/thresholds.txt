@@ -1,0 +1,20 @@
+Flavour: IO pixel
+Model: XGBoost (1900 trees, 33 features)
+F1_Threshold: 0.08368528634309769
+F2_Threshold: 0.08368528634309769
+Test_ROC_AUC: 0.984391340976728
+Test_PR_AUC: 0.9712708807678618
+Test_F2_global_WP: 0.881552455544983
+Test_F2_perbin_WP: 0.8460322160355342
+Test_perbin_WP: precision=0.5289669330582325 recall=0.9951582582690447 fake_rejection=0.6101752759946307
+Split: evt10 (event-level, train 60 / val 10 / test 30)
+Tree_budget: 2000
+Chosen_trees: 1900 (prune_tol=0.005, val F2 0.558631, best prefix 2000 at 0.560687)
+pT-bin recall-target set points (validation-derived):
+  pT [0.0, 3.0): thr=0.033348  n_val_sig=29847
+  pT [3.0, 5.0): thr=0.191316  n_val_sig=54851
+  pT [5.0, 10.0): thr=0.000000  n_val_sig=58450
+  pT [10.0, 50.0): thr=0.000000  n_val_sig=27189
+  pT [50.0, 200.0): thr=0.000000  n_val_sig=34771
+  pT [200.0, inf): thr=0.000000  n_val_sig=50091
+compact .bin md5: 01d87344e6a0f4ee79281dcbeec768b0

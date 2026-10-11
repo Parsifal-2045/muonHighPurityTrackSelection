@@ -1,0 +1,74 @@
+Test PR-AUC: 0.945424
+Test ROC-AUC: 0.977261
+
+Rank  Feature                                              Gain       Cover
+---------------------------------------------------------------------------
+1     is_low_pt                                        26718.53    151752.9
+2     L1TkMu_nStubs_Endcap                             11092.47     95474.7
+3     muon_general_tracks_etaErr                        5299.40    132988.0
+4     L1TkMu_nStubs                                     5076.48    110600.5
+5     muon_general_tracks_pt                            3580.07    150904.3
+6     muon_general_tracks_phiErr                        1662.77    161618.2
+7     L1TkMu_nCompatible                                1443.33     72800.6
+8     L1TkMu_dR2min                                     1376.24     56568.5
+9     muon_general_tracks_qoverpErr                     1260.52    111544.5
+10    L1TkMu_secondBest_dR2                             1173.97    130379.8
+11    L1TkMu_matchingScore                               936.40     58784.4
+12    L1TkMu_nStubs_Barrel                               799.88    150455.4
+13    L1TkMu_stubQual_max                                762.82    101562.5
+14    muon_general_tracks_nPixelHits                     555.37     77706.2
+15    muon_general_tracks_sip2D                          455.36     71866.2
+16    muon_general_tracks_nTrkLays                       448.30     68509.9
+17    muon_general_tracks_p                              431.95    130266.3
+18    L1TkMu_stubMax_etaRegion                           396.08     62054.1
+19    L1TkMu_stubMax_phiRegion                           366.26     74813.1
+20    muon_general_tracks_dzErr                          357.56     95362.4
+21    L1TkMu_stubMax_depthRegion                         356.05     52740.3
+22    muon_general_tracks_nFoundHits                     354.74     67815.7
+23    muon_general_tracks_lambdaErr                      292.03    104345.0
+24    muon_general_tracks_absEta                         291.33     73713.0
+25    L1TkMu_chi2Pt                                      238.95     67486.8
+26    L1TkMu_dPtNorm                                     217.22     70611.0
+27    muon_general_tracks_sipZ                           189.34     96335.4
+28    muon_general_tracks_impact3D                       186.29     73019.7
+29    muon_general_tracks_dxyOverPt                      161.67    115549.7
+30    muon_general_tracks_dzOverDxy                      141.93     85776.3
+31    muon_general_tracks_ptErrOverP                     135.21    101781.5
+32    muon_general_tracks_sigmaPtOverPt                   60.62    123525.6
+
+Unused features (no split): ['L1TkMu_hasMatch']
+
+Permutation importance (PR-AUC drop, pT < 5 GeV test subset, 5 repeats):
+  L1TkMu_nStubs_Endcap                         +0.18735 +/- 0.00045
+  L1TkMu_secondBest_dR2                        +0.06825 +/- 0.00036
+  L1TkMu_dR2min                                +0.05656 +/- 0.00026
+  L1TkMu_matchingScore                         +0.05391 +/- 0.00019
+  L1TkMu_nCompatible                           +0.03674 +/- 0.00007
+  L1TkMu_stubQual_max                          +0.03335 +/- 0.00007
+  L1TkMu_nStubs                                +0.03295 +/- 0.00019
+  muon_general_tracks_nTrkLays                 +0.03128 +/- 0.00015
+  muon_general_tracks_absEta                   +0.02861 +/- 0.00017
+  L1TkMu_stubMax_etaRegion                     +0.02648 +/- 0.00013
+  L1TkMu_stubMax_depthRegion                   +0.02121 +/- 0.00019
+  muon_general_tracks_sip2D                    +0.01844 +/- 0.00004
+  muon_general_tracks_nPixelHits               +0.01543 +/- 0.00004
+  muon_general_tracks_nFoundHits               +0.01399 +/- 0.00017
+  L1TkMu_nStubs_Barrel                         +0.01144 +/- 0.00014
+  muon_general_tracks_dzErr                    +0.00902 +/- 0.00006
+  muon_general_tracks_etaErr                   +0.00866 +/- 0.00014
+  muon_general_tracks_qoverpErr                +0.00793 +/- 0.00005
+  is_low_pt                                    +0.00776 +/- 0.00003
+  L1TkMu_stubMax_phiRegion                     +0.00757 +/- 0.00008
+  muon_general_tracks_lambdaErr                +0.00644 +/- 0.00006
+  muon_general_tracks_phiErr                   +0.00613 +/- 0.00007
+  muon_general_tracks_p                        +0.00417 +/- 0.00005
+  muon_general_tracks_impact3D                 +0.00340 +/- 0.00004
+  muon_general_tracks_dxyOverPt                +0.00315 +/- 0.00009
+  muon_general_tracks_sigmaPtOverPt            +0.00225 +/- 0.00005
+  muon_general_tracks_dzOverDxy                +0.00181 +/- 0.00003
+  muon_general_tracks_pt                       +0.00180 +/- 0.00002
+  muon_general_tracks_ptErrOverP               +0.00172 +/- 0.00001
+  muon_general_tracks_sipZ                     +0.00112 +/- 0.00003
+  L1TkMu_hasMatch                              +0.00000 +/- 0.00000
+  L1TkMu_dPtNorm                               -0.00110 +/- 0.00002
+  L1TkMu_chi2Pt                                -0.00114 +/- 0.00002
